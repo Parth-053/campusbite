@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global Resets */
+body {
+  @apply bg-gray-50 text-gray-800 antialiased;
+}
+
+#root {
+  @apply flex justify-center min-h-screen;
+}
+
+/* COMPONENT CLASSES 
+   (Mapping the classNames used in JSX to Tailwind Utilities)
+*/
+
+@layer components {
+  /* Layout */
+  .app-layout {
+    @apply w-full max-w-[480px] min-h-screen bg-white shadow-2xl relative overflow-hidden;
+  }
+
+  .page-container {
+    @apply p-5 pb-24 min-h-screen flex flex-col gap-4 overflow-y-auto;
+  }
+  
+  .page-container.with-nav {
+    @apply pb-24; 
+  }
+
+  .center-content {
+    @apply flex flex-col justify-center items-center text-center h-full;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-xl p-4 shadow-sm border border-gray-100 transition-all duration-200;
+  }
+
+  .canteen-card {
+    @apply flex items-center gap-4 hover:shadow-md cursor-pointer active:scale-95;
+  }
+
+  .menu-item-card {
+    @apply flex justify-between items-center mb-3;
+  }
+  
+  .college-card {
+    @apply hover:border-primary cursor-pointer mb-3;
+  }
+
+  /* Typography */
+  h1 { @apply text-3xl font-bold mb-2; }
+  h2 { @apply text-2xl font-bold mb-4 text-gray-800; }
+  h3 { @apply text-xl font-semibold mb-2 text-gray-700; }
+  p { @apply text-gray-500 text-sm; }
+
+  /* Buttons */
+  button {
+    @apply active:scale-95 transition-transform;
+  }
+
+  .btn-primary {
+    @apply w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-red-500 shadow-lg shadow-red-200;
+  }
+
+  .btn-secondary {
+    @apply w-full bg-secondary text-white font-bold py-3 rounded-xl hover:bg-teal-400;
+  }
+
+  .btn-danger {
+    @apply w-full bg-red-500 text-white font-bold py-3 rounded-xl hover:bg-red-600;
+  }
+
+  .btn-add {
+    @apply px-4 py-1 rounded-lg border border-primary text-primary font-bold text-sm hover:bg-red-50;
+  }
+  
+  .btn-back {
+    @apply mb-4 text-gray-500 hover:text-dark font-medium flex items-center;
+  }
+
+  .btn-remove {
+    @apply w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-gray-600 hover:bg-red-100 hover:text-red-500 font-bold;
+  }
+
+  /* Inputs */
+  input {
+    @apply w-full p-3 mb-4 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 bg-gray-50;
+  }
+
+  /* Navigation */
+  .bottom-nav {
+    @apply fixed bottom-0 w-full max-w-[480px] bg-white border-t border-gray-100 flex justify-around py-3 z-50;
+  }
+
+  .nav-item {
+    @apply flex flex-col items-center text-gray-400 text-xs font-medium gap-1;
+  }
+
+  .nav-item.active {
+    @apply text-primary;
+  }
+
+  /* Special Components */
+  .canteen-icon {
+    @apply text-3xl bg-gray-50 p-3 rounded-full;
+  }
+
+  .tag {
+    @apply text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider mx-2;
+  }
+  .tag.veg { @apply bg-green-50 text-green-600 border border-green-100; }
+  .tag.non-veg { @apply bg-red-50 text-red-600 border border-red-100; }
+
+  .splash-screen {
+    @apply h-screen flex flex-col justify-center items-center bg-primary text-white;
+  }
+
+  .floating-cart {
+    @apply fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-[400px] bg-dark text-white p-4 rounded-2xl flex justify-between items-center shadow-xl cursor-pointer hover:bg-black transition-colors z-40;
+  }
+
+  .badge {
+    @apply absolute -top-2 -right-2 bg-primary text-white text-xs w-5 h-5 flex items-center justify-center rounded-full border-2 border-white;
+  }
+  
+  .cart-icon-wrapper {
+    @apply relative p-2 bg-gray-50 rounded-full cursor-pointer hover:bg-gray-100;
+  }
+
+  .loader-container { @apply w-full flex justify-center py-4; }
+  .spinner {
+    @apply w-8 h-8 border-4 border-gray-200 border-t-primary rounded-full animate-spin;
+  }
+  
+  /* Payment */
+  .payment-card {
+    @apply flex items-center gap-3 border-2 border-transparent cursor-pointer;
+  }
+  .payment-card.selected {
+    @apply border-primary bg-red-50;
+  }
+  
+  /* Order Status Text */
+  .status.pending { @apply text-orange-500; }
+  .status.preparing { @apply text-blue-500; }
+  .status.ready { @apply text-green-600 font-bold; }
+  .status.completed { @apply text-gray-400; }
+}
