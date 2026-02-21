@@ -4,8 +4,10 @@ import { envConfig } from "./env.config.js";
 
 export const connectDB = async () => {
   try {
+    mongoose.set('strictQuery', true); 
+
     const conn = await mongoose.connect(envConfig.mongoose.url);
-    logger.info(`✅ MongoDB Connected: ${conn.connection.host}`);
+    logger.info(`✅ MongoDB Securely Connected: ${conn.connection.host}`);
     
     mongoose.connection.on('error', (err) => {
       logger.error(`❌ MongoDB Connection Error: ${err}`);
@@ -16,7 +18,7 @@ export const connectDB = async () => {
     });
 
   } catch (error) {
-    logger.error(`❌ Database Connection Failed: ${error.message}`);
+    logger.error(`FATAL: Database Connection Failed: ${error.message}`);
     process.exit(1);
   }
 };

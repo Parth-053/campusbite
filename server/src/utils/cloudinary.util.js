@@ -1,12 +1,5 @@
-import { v2 as cloudinary } from "cloudinary";
-import fs from "fs";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import cloudinary from "../config/cloudinary.js";  
+import fs from "fs/promises";  
 
 /**
  * Upload Image to Cloudinary (From Local Path)
@@ -15,16 +8,13 @@ export const uploadOnCloudinary = async (localFilePath, folder = "general") => {
   try {
     if (!localFilePath) return null;
 
-    // Upload
     const response = await cloudinary.uploader.upload(localFilePath, {
       folder: `campusbite/${folder}`,
       resource_type: "auto",
     });
 
-    // Clean up local file
-    if (fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
-    }
+    // Asynchronously delete local file
+    await fs.unlink(localFilePath).catch(err => console.error("Error deleting local file:", err));
 
     return {
       url: response.secure_url,
@@ -32,9 +22,9 @@ export const uploadOnCloudinary = async (localFilePath, folder = "general") => {
     };
   } catch (error) {
     console.error("Cloudinary Upload Error:", error.message);
-    // Clean up local file on error
-    if (localFilePath && fs.existsSync(localFilePath)) {
-      fs.unlinkSync(localFilePath);
+    
+    if (localFilePath) {
+      await fs.unlink(localFilePath).catch(err => console.error("Error deleting local file after failure:", err));
     }
     return null;
   }

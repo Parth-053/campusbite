@@ -4,8 +4,9 @@ export const ROLES = {
   ADMIN: "admin",
 };
 
+// Useful for Role-Based Access Control (RBAC) in middlewares
 export const PERMISSIONS = {
-  [ROLES.CUSTOMER]: [""],
-  [ROLES.OWNER]: [""],
+  [ROLES.CUSTOMER]: ["read:canteen", "create:order", "read:order"],
+  [ROLES.OWNER]: ["manage:canteen", "manage:menu", "manage:order"],
   [ROLES.ADMIN]: ["manage:all"],
 };

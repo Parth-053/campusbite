@@ -1,18 +1,18 @@
 import { logger } from "../config/logger.js";
 
 /**
- * Middleware to log HTTP requests
+ * Middleware to securely log HTTP requests
  */
 export const requestLogger = (req, res, next) => {
   const start = Date.now();
 
-  // Once the response is finished, log the details
   res.on("finish", () => {
     const duration = Date.now() - start;
-    const message = `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`;
+    // Log basic info without exposing req.body payload (which might contain passwords)
+    const message = `${req.method} ${req.originalUrl} - Status: ${res.statusCode} - ${duration}ms - IP: ${req.ip}`;
 
     if (res.statusCode >= 400) {
-      logger.error(message);
+      logger.warn(message);
     } else {
       logger.info(message);
     }

@@ -1,25 +1,22 @@
 import { ApiError } from "../utils/ApiError.js";
 
 /**
- * Middleware to validate Request Body using Joi
+ * Middleware to strictly validate Request Body using Joi
  * @param {Object} schema - Joi Schema Object
  */
 const validate = (schema) => (req, res, next) => {
-  // 'abortEarly: false' ensures we get ALL errors, not just the first one
+  // SECURITY: stripUnknown removes any malicious injected fields not in our schema
   const { error, value } = schema.validate(req.body, { 
     abortEarly: false, 
-    stripUnknown: true // Remove fields not present in schema
+    stripUnknown: true 
   });
 
   if (error) {
-    // Extract error messages into a clean array
     const errors = error.details.map((detail) => detail.message.replace(/"/g, ''));
-    
-    // Throw 422 (Unprocessable Entity)
-    return next(new ApiError(422, "Validation Error", errors));
+    throw new ApiError(422, "Data Validation Failed", errors);
   }
 
-  // Replace req.body with sanitized value (converted types, defaults applied)
+  // Replace req.body with 100% sanitized and safe data
   req.body = value;
   next();
 };

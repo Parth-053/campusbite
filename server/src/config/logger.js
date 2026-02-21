@@ -1,9 +1,9 @@
 import winston from "winston";
 import { envConfig } from "./env.config.js";
 
-// Define log format
 const logFormat = winston.format.printf(({ level, message, timestamp, stack }) => {
-  return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
+  const logMessage = stack && envConfig.env === "development" ? stack : message;
+  return `${timestamp} [${level.toUpperCase()}]: ${logMessage}`;
 });
 
 export const logger = winston.createLogger({
@@ -11,9 +11,7 @@ export const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.errors({ stack: true }),  
-    envConfig.env === "development" 
-      ? winston.format.colorize() 
-      : winston.format.uncolorize(),
+    envConfig.env === "development" ? winston.format.colorize() : winston.format.uncolorize(),
     logFormat
   ),
   transports: [

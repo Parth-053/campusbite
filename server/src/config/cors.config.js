@@ -9,10 +9,11 @@ export const corsOptions = {
     if (whitelist.includes(origin) || whitelist.includes("*")) {
       callback(null, true);
     } else {
-      callback(new Error(`Not allowed by CORS: ${origin}`));
+      callback(new Error(`SECURITY BLOCK: CORS origin ${origin} is not allowed to access this server.`));
     }
   },
   credentials: true,  
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"]
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  optionsSuccessStatus: 200
 };

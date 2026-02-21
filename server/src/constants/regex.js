@@ -11,9 +11,11 @@ export const MOBILE_REGEX = /^[6-9]\d{9}$/;
 // Indian Pincode (6 Digits)
 export const PINCODE_REGEX = /^[1-9][0-9]{5}$/;
 
-// Indian GSTIN (15 Characters)
-// Format: 22AAAAA0000A1Z5
+// Indian GSTIN (15 Characters) Format: 22AAAAA0000A1Z5
 export const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+// UPI ID Validation (e.g., username@okhdfcbank)
+export const UPI_REGEX = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
 
 // Strong Password: Min 8 chars, 1 Upper, 1 Lower, 1 Number, 1 Special
 export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;

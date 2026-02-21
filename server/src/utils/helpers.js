@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 /**
  * Generates a readable Order ID  
  */
@@ -12,4 +14,11 @@ export const generateOrderId = () => {
  */
 export const generateTransactionId = () => {
   return `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+};
+
+/**
+ * Generates a secure random 6-digit numeric OTP
+ */
+export const generateOTP = () => {
+  return crypto.randomInt(100000, 999999).toString();
 };

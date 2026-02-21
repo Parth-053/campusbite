@@ -1,9 +1,9 @@
 export const ORDER_STATUS = {
-  CONFIRM: "confirm",
-  PENDING: "pending",
-  PREPARING: "preparing",
-  READY: "ready",
-  COMPLETE: "complete",
+  PENDING: "Pending",
+  PREPARING: "Preparing",
+  READY: "Ready",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
 };
 
 export const PAYMENT_STATUS = {
