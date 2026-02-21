@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Settings as SettingsIcon, Save, LogOut, Percent, IndianRupee } from 'lucide-react';
 import { fetchSettings, updateSettings } from '../store/settingsSlice';
-import { logout } from '../store/authSlice';
+import { logoutAdmin } from '../store/authSlice';
 import Skeleton from '../components/common/Skeleton';
 
 // --- Sub-component: Manages form state cleanly without useEffect ---
@@ -183,7 +183,7 @@ const Settings = () => {
         <div className="p-5 sm:p-6">
           <p className="text-sm text-gray-600 mb-4">Securely sign out of your active admin session.</p>
           <button 
-            onClick={() => dispatch(logout())}
+            onClick={() => dispatch(logoutAdmin())}
             className="flex items-center justify-center gap-2 bg-white text-red-600 border border-red-200 px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-red-50 transition-colors w-full sm:w-auto"
           >
             <LogOut size={18} /> Sign Out

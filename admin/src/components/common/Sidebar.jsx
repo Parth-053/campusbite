@@ -5,7 +5,7 @@ import {
   ShoppingBag, BarChart3, Wallet, Settings, LogOut, X 
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { logout } from '../../store/authSlice';
+import { logoutAdmin } from '../../store/authSlice';
 
 const Sidebar = ({ isOpen, closeSidebar }) => {
   const dispatch = useDispatch();
@@ -28,7 +28,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
       lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
     `}>
       <div className="h-16 flex items-center justify-between px-6 border-b border-gray-700/50">
-        <h1 className="text-2xl font-bold text-primary">Food<span className="text-white">Campus</span></h1>
+        <h1 className="text-2xl font-bold text-primary">Campus<span className="text-white">Bite</span></h1>
         {/* Mobile Close Button */}
         <button 
           onClick={closeSidebar} 
@@ -62,7 +62,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
 
       <div className="p-4 border-t border-gray-700/50">
         <button
-          onClick={() => dispatch(logout())}
+          onClick={() => dispatch(logoutAdmin())}
           className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
         >
           <LogOut className="w-5 h-5 mr-3" />
