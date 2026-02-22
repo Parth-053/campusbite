@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Colleges from "../pages/Colleges";
+import Hostels from "../pages/Hostels";
 import Canteens from "../pages/Canteens";
 import CanteenDetail from '../pages/CanteenDetail';
 import Users from "../pages/Users";
@@ -63,6 +64,7 @@ const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/colleges" element={<Colleges />} />
+        <Route path="/hostels" element={<Hostels />} />
         <Route path="/canteens" element={<Canteens />} />
         <Route path="/users" element={<Users />} />
         <Route path="/orders" element={<Orders />} />

@@ -6,7 +6,7 @@ const customerSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   college: { type: mongoose.Schema.Types.ObjectId, ref: 'College' }, 
-  hostel: { type: String },
+  hostel: { type: mongoose.Schema.Types.ObjectId, ref: 'Hostel', required: true }, 
   roomNo: { type: String },
   profileImage: { type: String, default: "" }
 }, { timestamps: true });
