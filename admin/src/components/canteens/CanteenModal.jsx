@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { X } from "lucide-react";
+import { X, UploadCloud } from "lucide-react";
 import { fetchDistricts, clearDistricts, fetchPublicHostels, clearPublicHostels } from "../../store/locationSlice.js";
 
 const ModalForm = ({ onSave, states, adminColleges = [], isActionLoading, editingData }) => {
@@ -15,7 +15,7 @@ const ModalForm = ({ onSave, states, adminColleges = [], isActionLoading, editin
   const [newType, setNewType] = useState(editingData?.canteenType || "central");
   const [newHostel, setNewHostel] = useState(editingData?.hostel?._id || "");
   const [newName, setNewName] = useState(editingData?.name || "");
-  const [newGstin, setNewGstin] = useState(editingData?.gstin || "");
+  const [imageFile, setImageFile] = useState(null); 
   
   // Status
   const [newStatus, setNewStatus] = useState(editingData ? (editingData.isActive ? "Active" : "Inactive") : "Active");
@@ -49,7 +49,7 @@ const ModalForm = ({ onSave, states, adminColleges = [], isActionLoading, editin
       college: newCollege,
       canteenType: newType,
       hostel: newType === 'hostel' ? newHostel : null,
-      gstin: newGstin,
+      image: imageFile, 
       isActive: newStatus === "Active",
     });
   };
@@ -108,9 +108,26 @@ const ModalForm = ({ onSave, states, adminColleges = [], isActionLoading, editin
           <input type="text" placeholder="E.g., Engineering Cafe" value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none" required />
         </div>
 
-        <div className="md:col-span-2">
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">GSTIN Number (Optional)</label>
-          <input type="text" placeholder="Enter GSTIN if available" value={newGstin} onChange={(e) => setNewGstin(e.target.value)} className="w-full border border-gray-300 p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-primary outline-none" />
+        {/* Image Upload Field */}
+        <div className="md:col-span-2 border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors relative">
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Canteen Thumbnail (Optional)</label>
+          <div className="flex items-center justify-center w-full">
+            <label className="flex flex-col items-center justify-center w-full h-20 cursor-pointer">
+              <div className="flex flex-col items-center justify-center pt-2 pb-3">
+                <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
+                <p className="text-xs text-gray-500">
+                  <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+                </p>
+              </div>
+              <input type="file" accept="image/*" className="hidden" onChange={(e) => setImageFile(e.target.files[0])} />
+            </label>
+          </div>
+          {imageFile && (
+            <p className="text-xs font-bold text-green-600 mt-2 text-center">Selected: {imageFile.name}</p>
+          )}
+          {editingData?.image && !imageFile && (
+            <p className="text-xs font-medium text-gray-500 mt-2 text-center">Existing image will be kept. Upload new to replace.</p>
+          )}
         </div>
 
         {/* SUBMIT ROW */}

@@ -3,9 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Coffee, CheckCircle, Plus } from 'lucide-react';
 
 import { fetchStates } from '../store/locationSlice.js';
-import { fetchColleges } from '../store/collegeSlice.js';
+import { fetchColleges } from '../store/collegeSlice.js'; 
 
-// Canteen Slice Actions
 import { 
   fetchCanteens, addNewCanteen, editCanteen, 
   deleteCanteen, toggleCanteenStatus 
@@ -41,7 +40,6 @@ const Canteens = () => {
     dispatch(fetchCanteens());
   }, [dispatch]);
 
-  // Safe Local Filtering
   const filteredCanteens = (adminCanteens || []).filter((c) => {
     if (filterState && c.college?.district?.state?._id !== filterState) return false;
     if (filterDistrict && c.college?.district?._id !== filterDistrict) return false;
@@ -56,12 +54,20 @@ const Canteens = () => {
   const activeCanteensCount = (adminCanteens || []).filter(c => c.isActive).length;
 
   const handleSaveCanteen = (canteenData) => {
+    const formData = new FormData();
+
+    Object.keys(canteenData).forEach((key) => {
+      if (key !== 'id' && canteenData[key] !== null && canteenData[key] !== undefined && canteenData[key] !== '') {
+        formData.append(key, canteenData[key]);
+      }
+    });
+ 
     if (editingCanteen) {
-      dispatch(editCanteen({ id: canteenData.id, data: canteenData })).then((res) => {
+      dispatch(editCanteen({ id: canteenData.id, data: formData })).then((res) => {
         if (!res.error) { setIsModalOpen(false); dispatch(fetchCanteens()); }
       });
     } else {
-      dispatch(addNewCanteen(canteenData)).then((res) => {
+      dispatch(addNewCanteen(formData)).then((res) => {
         if (!res.error) { setIsModalOpen(false); dispatch(fetchCanteens()); }
       });
     }

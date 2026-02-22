@@ -14,12 +14,24 @@ export const getAdminCanteens = asyncHandler(async (req, res) => {
 });
 
 export const addCanteen = asyncHandler(async (req, res) => {
-  const canteen = await createCanteenService(req.body);
+  const canteenData = { ...req.body };
+  
+  if (req.file) { 
+    canteenData.image = req.file.path; 
+  }
+
+  const canteen = await createCanteenService(canteenData);
   return res.status(201).json(new ApiResponse(201, canteen, "Canteen added successfully"));
 });
 
 export const updateCanteen = asyncHandler(async (req, res) => {
-  const updatedCanteen = await updateCanteenService(req.params.id, req.body);
+  const canteenData = { ...req.body };
+  
+  if (req.file) { 
+    canteenData.image = req.file.path; 
+  }
+
+  const updatedCanteen = await updateCanteenService(req.params.id, canteenData);
   return res.status(200).json(new ApiResponse(200, updatedCanteen, "Canteen updated successfully"));
 });
 

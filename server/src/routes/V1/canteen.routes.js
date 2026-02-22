@@ -1,9 +1,7 @@
 import express from "express";
 
-// Import Common Controllers
+import { upload } from "../../middleware/multer.middleware.js"; 
 import { getCanteens } from "../../controllers/common/canteen.controller.js";
-
-// Import Admin Controllers
 import {
   getAdminCanteens,
   addCanteen,
@@ -11,8 +9,6 @@ import {
   deleteCanteen,
   toggleCanteenStatus
 } from "../../controllers/admin/canteen.controller.js";
-
-// Import Middlewares
 import { verifyToken, authorizeRoles } from "../../middleware/auth.middleware.js";
 import { ROLES } from "../../constants/roles.js";
 
@@ -30,8 +26,10 @@ router.get("/common/:collegeId", getCanteens);
 router.use("/admin", verifyToken, authorizeRoles(ROLES.ADMIN));
 
 router.get("/admin", getAdminCanteens);
-router.post("/admin", addCanteen);
-router.put("/admin/:id", updateCanteen);
+
+router.post("/admin", upload.single("image"), addCanteen);
+router.put("/admin/:id", upload.single("image"), updateCanteen);
+
 router.delete("/admin/:id", deleteCanteen);
 router.patch("/admin/:id/status", toggleCanteenStatus);
 
