@@ -12,7 +12,7 @@ export const sendEmail = async (toEmail, toName, subject, htmlContent) => {
   try {
     sendSmtpEmail.subject = subject;
     sendSmtpEmail.htmlContent = htmlContent;
-    sendSmtpEmail.sender = { name: "CampusBite", email: "noreply@campusbite.com" };  
+    sendSmtpEmail.sender = { name: "CampusBite", email: "campusbite.app07@gmail.com" }; 
     sendSmtpEmail.to = [{ email: toEmail, name: toName }];
 
     const data = await transactionalEmailsApi.sendTransacEmail(sendSmtpEmail);

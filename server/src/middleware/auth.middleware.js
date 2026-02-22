@@ -6,7 +6,37 @@ import Owner from "../models/Owner.js";
 import Customer from "../models/Customer.js";
 
 /**
+ * NAYA MIDDLEWARE: For Registration Only
+ */
+export const verifyFirebaseToken = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new ApiError(401, "Unauthorized: Missing or invalid token format");
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    // SECURITY: Verify token validity and expiration via Firebase
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    // Attach user safely to request (Sirf Firebase ka data, DB ka nahi)
+    req.user = { 
+      firebaseUid: decodedToken.uid,
+      uid: decodedToken.uid,
+      email: decodedToken.email 
+    };
+    
+    next();
+  } catch (error) {
+    throw new ApiError(401, error.message || "Unauthorized: Token is invalid or expired");
+  }
+});
+
+/**
  * Step 1: Verify Firebase Token & Attach Secure User Data
+ * (Used for Login and protected routes where user MUST exist in DB)
  */
 export const verifyToken = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -18,7 +48,7 @@ export const verifyToken = asyncHandler(async (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    //  SECURITY: Verify token validity and expiration via Firebase
+    // SECURITY: Verify token validity and expiration via Firebase
     const decodedToken = await admin.auth().verifyIdToken(token);
     const firebaseUid = decodedToken.uid;
     

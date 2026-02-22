@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { ArrowLeft, Ban, Trash2, User, ShoppingBag, Activity } from 'lucide-react';
-
-import { fetchCanteenById, toggleCanteenStatus, deleteCanteen, clearCurrentCanteen } from '../store/canteenSlice';
-import Skeleton from '../components/common/Skeleton';
+import { ArrowLeft, Ban, ShieldAlert, Trash2, User, ShoppingBag, Activity } from 'lucide-react';
+import { fetchCanteenById, toggleCanteenStatus, toggleBanOwner, deleteCanteen, clearCurrentCanteen } from '../store/canteenSlice';
 import CanteenBasicInfo from '../components/canteens/detail/CanteenBasicInfo';
 import CanteenMenu from '../components/canteens/detail/CanteenMenu';
 import CanteenBusiness from '../components/canteens/detail/CanteenBusiness';
+import Skeleton from '../components/common/Skeleton';
 
 const CanteenDetail = () => {
   const { id } = useParams();
@@ -22,15 +21,22 @@ const CanteenDetail = () => {
     return () => dispatch(clearCurrentCanteen());
   }, [dispatch, id]);
 
-  const handleToggleBlock = () => {
-    if (window.confirm(`Are you sure you want to ${canteen.status === 'Active' ? 'block' : 'unblock'} this canteen?`)) {
-      dispatch(toggleCanteenStatus(canteen.id));
+  const handleToggleVisibility = () => {
+    if (window.confirm(`Are you sure you want to ${canteen.isActive ? 'Hide' : 'Publish'} this canteen?`)) {
+      dispatch(toggleCanteenStatus(canteen._id));
+    }
+  };
+
+  const handleToggleBan = () => {
+    const isBanned = canteen.owner?.isBanned;
+    if(window.confirm(`Are you sure you want to ${isBanned ? 'UNBAN' : 'BAN'} this owner?`)) {
+      dispatch(toggleBanOwner(canteen.owner._id));
     }
   };
 
   const handleDelete = () => {
     if (window.confirm("Permanently delete this canteen? This action cannot be undone.")) {
-      dispatch(deleteCanteen(canteen.id)).then(() => navigate('/canteens', { replace: true }));
+      dispatch(deleteCanteen(canteen._id)).then(() => navigate('/canteens', { replace: true }));
     }
   };
 
@@ -43,7 +49,8 @@ const CanteenDetail = () => {
     );
   }
 
-  const isBlocked = canteen.status === 'Inactive';
+  const isBlocked = !canteen.isActive;
+  const isOwnerBanned = canteen.owner?.isBanned;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -63,25 +70,37 @@ const CanteenDetail = () => {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-2xl font-bold text-gray-900">{canteen.name}</h2>
-              <span className={`px-2.5 py-1 text-[11px] font-bold uppercase rounded-full ${isBlocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-                {isBlocked ? 'Blocked' : 'Active'}
+              <span className={`px-2.5 py-1 text-[11px] font-bold uppercase rounded-full ${isBlocked ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-800'}`}>
+                {isBlocked ? 'Hidden' : 'Active'}
               </span>
+              {isOwnerBanned && <span className="px-2 py-1 text-[11px] font-bold bg-red-600 text-white rounded-md uppercase">OWNER BANNED</span>}
             </div>
-            <p className="text-gray-500 text-sm">{canteen.college}</p>
+            <p className="text-gray-500 text-sm">{canteen.college?.name}</p>
           </div>
           
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
+            {/* Toggle Canteen Visibility */}
             <button 
-              onClick={handleToggleBlock} 
-              className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${isBlocked ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'}`}
+              onClick={handleToggleVisibility} 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${isBlocked ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'}`}
             >
-              <Ban size={16}/> {isBlocked ? 'Unblock' : 'Block'}
+              <Ban size={16}/> {isBlocked ? 'Publish Canteen' : 'Hide Canteen'}
             </button>
+
+            {/* Toggle Owner Ban */}
+            <button 
+              onClick={handleToggleBan} 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm border transition-colors ${isOwnerBanned ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+            >
+              <ShieldAlert size={16}/> {isOwnerBanned ? 'Unban Owner' : 'Ban Owner'}
+            </button>
+
+            {/* Delete Canteen */}
             <button 
               onClick={handleDelete} 
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-bold text-sm bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition-colors"
             >
-              <Trash2 size={16}/> Delete
+              <Trash2 size={16}/>
             </button>
           </div>
         </div>

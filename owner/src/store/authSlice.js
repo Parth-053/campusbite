@@ -1,142 +1,132 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../config/firebase';
+import api from '../api/axios';
 
-// --- MOCK ASYNC THUNKS ---
-
-export const loginUser = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
+// 1. REGISTER
+export const registerOwnerAccount = createAsyncThunk('auth/registerOwner', async (dataObj, { rejectWithValue }) => {
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const userCredential = await createUserWithEmailAndPassword(auth, dataObj.personal.email, dataObj.personal.password);
+    const token = await userCredential.user.getIdToken();
+
+    const formData = new FormData();
+    formData.append('personal', JSON.stringify(dataObj.personal));
+    formData.append('payment', JSON.stringify(dataObj.payment));
     
-    // MOCK VALIDATION
-    if (credentials.email === 'owner@test.com' && credentials.password === 'password') {
-      return { 
-        id: 'own_001', 
-        name: 'Test Owner', 
-        email: credentials.email, 
-        token: 'mock-jwt-token',
-        isVerified: true,
-        isApproved: true 
-      };
-    }
-    return rejectWithValue('Invalid email or password');
-  } catch (error) {
-    return rejectWithValue(error.message);
+    const { image, ...restCanteen } = dataObj.canteen;
+    formData.append('canteen', JSON.stringify(restCanteen));
+    if (image) formData.append('image', image); 
+
+    const res = await api.post('/auth/owner/register', formData, { 
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'owner', 'Content-Type': 'multipart/form-data' }
+    });
+    
+    return { data: res.data.data, email: dataObj.personal.email };
+  } catch (err) {
+    if (err.code === 'auth/email-already-in-use') return rejectWithValue("Email is already registered.");
+      
+    const validationErrors = err.response?.data?.errors;
+    const errorMessage = validationErrors && validationErrors.length > 0 
+      ? validationErrors[0] 
+      : (err.response?.data?.message || err.message);
+
+    return rejectWithValue(errorMessage);
   }
 });
 
-export const registerOwner = createAsyncThunk('auth/register', async (formData, { rejectWithValue }) => {
+// 2. VERIFY OTP
+export const verifyOwnerEmail = createAsyncThunk('auth/verifyEmail', async ({ otp }, { rejectWithValue }) => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return { email: formData.personal.email }; // Return email for OTP step
-  } catch {
-    // Fixed: Removed unused 'error' variable
-    return rejectWithValue('Registration failed. Try again.');
+    const res = await api.post('/auth/owner/verify-email', { otp });
+    return res.data.data;
+  } catch (err) { 
+    return rejectWithValue(err.response?.data?.message || err.message); 
   }
 });
 
-export const verifyOtp = createAsyncThunk('auth/verifyOtp', async ({ otp }, { rejectWithValue }) => {
+// 3. RESEND OTP
+export const resendOwnerOtp = createAsyncThunk('auth/resendOtp', async (_, { rejectWithValue }) => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (otp === '123456') return true; // Mock OTP
-    return rejectWithValue('Invalid OTP');
-  } catch {
-    // Fixed: Removed unused 'error' variable
-    return rejectWithValue('Verification failed');
+    const res = await api.post('/auth/owner/resend-otp');
+    return res.data.message;
+  } catch (err) { return rejectWithValue(err.response?.data?.message || err.message); }
+});
+
+// 4. LOGIN
+export const loginOwner = createAsyncThunk('auth/loginOwner', async ({ email, password }, { rejectWithValue }) => {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    const res = await api.get('/auth/owner/profile'); 
+    return res.data.data;
+  } catch (err) { 
+    return rejectWithValue(err.response?.data?.message || "Invalid Email or Password"); 
   }
 });
 
-// --- MOCK LOCATION DATA ---
-const MOCK_LOCATIONS = {
-  states: [
-    { id: 'MH', name: 'Maharashtra' },
-    { id: 'KA', name: 'Karnataka' },
-    { id: 'DL', name: 'Delhi' },
-    { id: 'UP', name: 'Uttar Pradesh' }
-  ],
-  districts: {
-    'MH': [{ id: 'PN', name: 'Pune' }, { id: 'MB', name: 'Mumbai' }],
-    'KA': [{ id: 'BL', name: 'Bangalore' }, { id: 'MY', name: 'Mysore' }],
-    'DL': [{ id: 'ND', name: 'New Delhi' }, { id: 'SD', name: 'South Delhi' }],
-    'UP': [{ id: 'LK', name: 'Lucknow' }, { id: 'KN', name: 'Kanpur' }]
-  },
-  colleges: {
-    'PN': [{ id: 'col_1', name: 'Pune Institute of Computer Technology' }, { id: 'col_2', name: 'COEP Technological University' }],
-    'MB': [{ id: 'col_3', name: 'IIT Bombay' }, { id: 'col_4', name: 'VJTI Mumbai' }],
-    'BL': [{ id: 'col_5', name: 'RV College of Engineering' }, { id: 'col_6', name: 'BMS College' }]
-  },
-  hostels: {
-    'col_1': [{ id: 'h1', name: 'Boys Hostel A' }, { id: 'h2', name: 'Girls Hostel B' }],
-    'col_3': [{ id: 'h3', name: 'H1 - Main Hostel' }, { id: 'h4', name: 'H10 - New Hostel' }]
-  }
-};
+// 5. RESET PASSWORD
+export const resetOwnerPassword = createAsyncThunk('auth/resetPassword', async (email, { rejectWithValue }) => {
+  try { await sendPasswordResetEmail(auth, email); return true; } 
+  catch (err) { return rejectWithValue(err.message); }
+});
 
-const initialState = {
-  user: localStorage.getItem('owner') ? JSON.parse(localStorage.getItem('owner')) : null,
-  isAuthenticated: !!localStorage.getItem('owner'),
-  isLoading: false,
-  error: null,
-  registrationStep: 1, // 1=Personal, 2=Canteen, 3=Bank, 4=OTP, 5=Approval
-  tempEmail: null, // Stored during registration for OTP
-  locationData: MOCK_LOCATIONS
-};
+// 6. LOGOUT
+export const logoutOwner = createAsyncThunk('auth/logoutOwner', async () => {
+  try { await signOut(auth); return null; } catch  { return null; }
+});
+
+export const restoreSession = createAsyncThunk('auth/restoreSession', async (_, { rejectWithValue }) => {
+  try {
+    const res = await api.get('/auth/owner/profile'); 
+    return res.data.data;
+  } catch (err) { 
+    return rejectWithValue(err.response?.data?.message || err.message); 
+  }
+});
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
-  reducers: {
-    logout: (state) => {
-      state.user = null;
-      state.isAuthenticated = false;
-      localStorage.removeItem('owner');
-    },
-    resetAuthError: (state) => {
-      state.error = null;
-    },
-    setRegistrationStep: (state, action) => {
-      state.registrationStep = action.payload;
-    }
+  initialState: { registrationStep: 1, ownerData: null, isAuthenticated: false, isLoading: false, error: null, tempEmail: '' },
+  reducers: { 
+    setStep: (state, action) => { state.registrationStep = action.payload; }, 
+    resetAuthError: (state) => { state.error = null; } 
   },
   extraReducers: (builder) => {
-    // Login
     builder
-      .addCase(loginUser.pending, (state) => { state.isLoading = true; state.error = null; })
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload;
-        localStorage.setItem('owner', JSON.stringify(action.payload));
+      // Register
+      .addCase(registerOwnerAccount.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(registerOwnerAccount.fulfilled, (state, action) => { 
+        state.isLoading = false; state.ownerData = action.payload.data; state.tempEmail = action.payload.email; state.registrationStep = 4; 
       })
-      .addCase(loginUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      });
+      .addCase(registerOwnerAccount.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
+      
+      // Verify OTP
+      .addCase(verifyOwnerEmail.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(verifyOwnerEmail.fulfilled, (state) => { 
+        state.isLoading = false; if(state.ownerData) state.ownerData.isVerified = true; state.registrationStep = 5; 
+      })
+      .addCase(verifyOwnerEmail.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
+      
+      // Login
+      .addCase(loginOwner.pending, (state) => { state.isLoading = true; state.error = null; })
+      .addCase(loginOwner.fulfilled, (state, action) => { state.isLoading = false; state.ownerData = action.payload; state.isAuthenticated = true; })
+      .addCase(loginOwner.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; signOut(auth); }) 
 
-    // Register
-    builder
-      .addCase(registerOwner.pending, (state) => { state.isLoading = true; state.error = null; })
-      .addCase(registerOwner.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.tempEmail = action.payload.email;
-        state.registrationStep = 4; // Move to OTP
+      // Restore Session Cases
+      .addCase(restoreSession.fulfilled, (state, action) => { 
+        state.ownerData = action.payload; 
+        state.isAuthenticated = true; 
       })
-      .addCase(registerOwner.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
-      });
-
-    // Verify OTP
-    builder
-      .addCase(verifyOtp.pending, (state) => { state.isLoading = true; state.error = null; })
-      .addCase(verifyOtp.fulfilled, (state) => {
-        state.isLoading = false;
-        state.registrationStep = 5; // Move to Approval Pending
+      .addCase(restoreSession.rejected, (state) => { 
+        state.ownerData = null; 
+        state.isAuthenticated = false; 
       })
-      .addCase(verifyOtp.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+      
+      // Logout
+      .addMatcher((action) => action.type === logoutOwner.fulfilled.type, (state) => { 
+        state.ownerData = null; state.isAuthenticated = false; state.registrationStep = 1; 
       });
   }
 });
 
-export const { logout, resetAuthError, setRegistrationStep } = authSlice.actions;
+export const { setStep, resetAuthError } = authSlice.actions;
 export default authSlice.reducer;

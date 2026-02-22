@@ -52,5 +52,4 @@ const CanteenFilters = ({
     </div>
   );
 };
-
 export default CanteenFilters;

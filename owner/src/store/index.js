@@ -9,6 +9,7 @@ import uiReducer from './ui/uiSlice';
 import notificationReducer from './notificationSlice';
 import profileReducer from './profileSlice';
 import transactionReducer from './transactionSlice';
+import locationReducer from './locationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     notification: notificationReducer,
     profile: profileReducer,
     transaction: transactionReducer,
+    location: locationReducer,
   }
 });

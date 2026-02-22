@@ -1,38 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Coffee, CheckCircle, Plus } from 'lucide-react';
+import { Coffee, CheckCircle, Clock } from 'lucide-react'; 
 
 import { fetchStates } from '../store/locationSlice.js';
 import { fetchColleges } from '../store/collegeSlice.js'; 
-
-import { 
-  fetchCanteens, addNewCanteen, editCanteen, 
-  deleteCanteen, toggleCanteenStatus 
-} from '../store/canteenSlice.js';
+import { fetchCanteens, updateOwnerStatus, deleteCanteen, toggleCanteenStatus } from '../store/canteenSlice.js';
 
 import StatCard from '../components/dashboard/StatCard';
-import Skeleton from '../components/common/Skeleton';
 import CanteenFilters from '../components/canteens/CanteenFilters';
-import CanteenModal from '../components/canteens/CanteenModal';
-import CanteensTable from '../components/canteens/CanteensTable';
+import CanteensTable from '../components/canteens/CanteensTable'; 
 
 const Canteens = () => {
   const dispatch = useDispatch();
   
   const { states = [] } = useSelector((state) => state.location || {});
   const { adminColleges = [] } = useSelector((state) => state.college || {});
-  
-  const { adminCanteens = [], isLoading, isActionLoading } = useSelector(
-    (state) => state.canteen || {}
-  );
+  const { adminCanteens = [], isLoading } = useSelector((state) => state.canteen || {});
 
   const [filterState, setFilterState] = useState('');
   const [filterDistrict, setFilterDistrict] = useState('');
   const [filterCollege, setFilterCollege] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingCanteen, setEditingCanteen] = useState(null);
 
   useEffect(() => {
     dispatch(fetchStates());
@@ -51,43 +39,25 @@ const Canteens = () => {
     return true;
   });
 
-  const activeCanteensCount = (adminCanteens || []).filter(c => c.isActive).length;
+  const activeCanteensCount = adminCanteens.filter(c => c.isActive && c.owner?.status === 'approved').length;
+  const pendingRequestsCount = adminCanteens.filter(c => c.owner?.status === 'pending').length;
 
-  const handleSaveCanteen = (canteenData) => {
-    const formData = new FormData();
-
-    Object.keys(canteenData).forEach((key) => {
-      if (key !== 'id' && canteenData[key] !== null && canteenData[key] !== undefined && canteenData[key] !== '') {
-        formData.append(key, canteenData[key]);
-      }
-    });
- 
-    if (editingCanteen) {
-      dispatch(editCanteen({ id: canteenData.id, data: formData })).then((res) => {
-        if (!res.error) { setIsModalOpen(false); dispatch(fetchCanteens()); }
-      });
-    } else {
-      dispatch(addNewCanteen(formData)).then((res) => {
-        if (!res.error) { setIsModalOpen(false); dispatch(fetchCanteens()); }
-      });
+  const handleApproveReject = (ownerId, newStatus) => {
+    if (window.confirm(`Are you sure you want to mark this request as ${newStatus}?`)) {
+      dispatch(updateOwnerStatus({ ownerId, status: newStatus }));
     }
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this canteen?")) {
-      dispatch(deleteCanteen(id)).then(res => {
-        if(res.error) alert(res.payload);
-      });
+      dispatch(deleteCanteen(id));
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Canteens Directory</h1>
-        <button onClick={() => { setEditingCanteen(null); setIsModalOpen(true); }} className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2">
-          <Plus size={18} /> Add Canteen
-        </button>
+        <h1 className="text-2xl font-bold text-gray-800">Canteens & Requests</h1>
       </div>
 
       <CanteenFilters 
@@ -98,23 +68,18 @@ const Canteens = () => {
         filterStatus={filterStatus} setFilterStatus={setFilterStatus}
       />
 
-      <div className="grid grid-cols-2 gap-3 md:gap-6">
-        <StatCard title="Total Canteens" value={adminCanteens.length} icon={Coffee} color="bg-orange-500" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6">
+        <StatCard title="Total Registrations" value={adminCanteens.length} icon={Coffee} color="bg-blue-500" />
         <StatCard title="Active Canteens" value={activeCanteensCount} icon={CheckCircle} color="bg-green-500" />
+        <StatCard title="Pending Requests" value={pendingRequestsCount} icon={Clock} color="bg-amber-500" />
       </div>
 
       <CanteensTable 
-        canteens={filteredCanteens} isLoading={isLoading} 
+        canteens={filteredCanteens} 
+        isLoading={isLoading} 
         onToggleStatus={(id) => dispatch(toggleCanteenStatus(id))}
-        onEdit={(canteen) => { setEditingCanteen(canteen); setIsModalOpen(true); }}
+        onApproveReject={handleApproveReject} 
         onDelete={handleDelete} 
-      />
-
-      <CanteenModal 
-        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} 
-        onSave={handleSaveCanteen} editingData={editingCanteen}
-        states={states} adminColleges={adminColleges}
-        isActionLoading={isActionLoading}
       />
     </div>
   );

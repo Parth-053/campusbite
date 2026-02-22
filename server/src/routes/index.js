@@ -2,12 +2,14 @@ import express from "express";
 import authRoutes from "./v1/auth.routes.js";
 import locationRoutes from "./v1/location.routes.js";
 import canteenRoutes from "./v1/canteen.routes.js";
+import adminRoutes from "./v1/admin.routes.js";
 
 const router = express.Router();
 
-// Mount all Authentication Routes under /api/v1/auth
+// Mount all Routes under /api/v1
 router.use("/v1/auth", authRoutes);
 router.use("/v1/locations", locationRoutes);
 router.use("/v1/canteens", canteenRoutes);
+router.use("/v1/admin", adminRoutes);
 
 export default router;
