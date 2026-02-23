@@ -10,15 +10,16 @@ export const getOwnerProfileService = async (ownerId) => {
   const owner = await Owner.findById(ownerId);
   if (!owner) throw new ApiError(404, "Owner profile not found");
 
-  // 🚀 FIXED: Added `strictPopulate: false` to prevent 500 Internal Server Error crashes
+  // 🚀 FIXED: Correct Nested Deep Populate (College -> District -> State)
   const canteen = await Canteen.findOne({ owner: ownerId })
     .populate({
       path: "college",
-      strictPopulate: false,
-      populate: [
-        { path: "state", select: "name", strictPopulate: false },
-        { path: "district", select: "name", strictPopulate: false }
-      ]
+      populate: {
+        path: "district",
+        populate: {
+          path: "state"
+        }
+      }
     })
     .populate("hostel")
     .populate("allowedHostels");
@@ -54,7 +55,7 @@ export const updateOwnerProfileService = async (ownerId, updateData, imagePath) 
   
   if (imagePath) canteenUpdate.image = imagePath; 
 
-  // 🚀 FIXED: Added `strictPopulate: false` here as well
+  // 🚀 FIXED: Correct Nested Deep Populate here too
   const updatedCanteen = await Canteen.findOneAndUpdate(
     { owner: ownerId },
     canteenUpdate,
@@ -62,11 +63,12 @@ export const updateOwnerProfileService = async (ownerId, updateData, imagePath) 
   )
   .populate({
     path: "college",
-    strictPopulate: false,
-    populate: [
-      { path: "state", select: "name", strictPopulate: false },
-      { path: "district", select: "name", strictPopulate: false }
-    ]
+    populate: {
+      path: "district",
+      populate: {
+        path: "state"
+      }
+    }
   })
   .populate("hostel")
   .populate("allowedHostels");

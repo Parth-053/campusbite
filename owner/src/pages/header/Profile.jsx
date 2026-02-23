@@ -11,14 +11,14 @@ import {
   clearDistricts, clearColleges, clearHostels 
 } from '../../store/locationSlice';
 
-// 🚀 Helper: Securely grab ID
+// Helper: Securely grab ID
 const extractId = (item) => {
   if (!item) return '';
   if (typeof item === 'object') return item._id || item.id || '';
   return String(item);
 };
 
-// 🚀 Helper: Securely grab Name
+// Helper: Securely grab Name
 const extractName = (item) => {
   if (!item) return '';
   if (typeof item === 'object') return item.name || item.state || item.district || '';
@@ -34,17 +34,14 @@ const Profile = () => {
   const locationData = useSelector(state => state.location);
   const { updateLoading } = useSelector(state => state.profile);
 
-  // Initialize strictly with IDs
-  const c = ownerData?.canteen?.college || {};
-  
-  // 🚀 CRITICAL FIX: If College doesn't have State, check if District has it
-  let initStateId = extractId(c.state);
-  if (!initStateId && typeof c.district === 'object') {
-    initStateId = extractId(c.district.state);
-  }
+  // 🚀 FIXED: Explicitly map out the nested relationship
+  const initialCollege = ownerData?.canteen?.college || {};
+  const initialDistrict = initialCollege?.district || {};
+  const initialStateObj = initialDistrict?.state || {};
 
-  const initDistId = extractId(c.district);
-  const initCollId = extractId(c);
+  const initStateId = extractId(initialStateObj);
+  const initDistId = extractId(initialDistrict);
+  const initCollId = extractId(initialCollege);
   const initHostelId = extractId(ownerData?.canteen?.hostel);
 
   const [formData, setFormData] = useState(() => ({
@@ -79,15 +76,13 @@ const Profile = () => {
     setPrevOwner(ownerData);
 
     const newColl = ownerData.canteen?.college || {};
-    let newStateId = extractId(newColl.state);
-    if (!newStateId && typeof newColl.district === 'object') {
-       newStateId = extractId(newColl.district.state);
-    }
+    const newDist = newColl.district || {};
+    const newStateObj = newDist.state || {};
 
     setFormData({
       name: ownerData?.name || '', mobile: ownerData?.phone || '', upi: ownerData?.upiId || '',
       canteenName: ownerData?.canteen?.name || '', openingTime: ownerData?.canteen?.openingTime || '', closingTime: ownerData?.canteen?.closingTime || '',
-      state: newStateId, district: extractId(newColl.district), collegeId: extractId(newColl),
+      state: extractId(newStateObj), district: extractId(newDist), collegeId: extractId(newColl),
       hostelId: extractId(ownerData.canteen?.hostel), allowedHostels: ownerData.canteen?.allowedHostels?.map(h => extractId(h)) || []
     });
     setSelectedImage(null); setImagePreview(null); setIsDirty(false); 
@@ -173,7 +168,6 @@ const Profile = () => {
 
       <div className="max-w-5xl mx-auto p-4 md:p-6">
         
-        {/* Banner Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden relative mb-6">
           <div onClick={() => bannerInputRef.current.click()} className="h-40 relative cursor-pointer group bg-slate-200 flex items-center justify-center overflow-hidden">
             {displayImage ? (
@@ -238,9 +232,7 @@ const Profile = () => {
                         <select className="input-field bg-slate-50 focus:bg-white" value={formData.state} onChange={handleStateChange}>
                           <option value="">Select State</option>
                           {formData.state && !isStateInList && (
-                            <option value={formData.state}>
-                               {extractName(c?.state) || (typeof c?.district === 'object' ? extractName(c.district.state) : 'Loading...')}
-                            </option>
+                            <option value={formData.state}>{extractName(initialStateObj) || 'Loading...'}</option>
                           )}
                           {locationData.states?.map((s, i) => (
                             <option key={i} value={extractId(s)}>{extractName(s) || extractId(s)}</option>
@@ -252,7 +244,7 @@ const Profile = () => {
                         <select className="input-field bg-slate-50 focus:bg-white" value={formData.district} onChange={handleDistrictChange} disabled={!formData.state}>
                           <option value="">Select District</option>
                           {formData.district && !isDistrictInList && (
-                            <option value={formData.district}>{extractName(c?.district) || 'Loading...'}</option>
+                            <option value={formData.district}>{extractName(initialDistrict) || 'Loading...'}</option>
                           )}
                           {locationData.districts?.map((d, i) => (
                             <option key={i} value={extractId(d)}>{extractName(d) || extractId(d)}</option>
@@ -266,7 +258,7 @@ const Profile = () => {
                       <select className="input-field bg-slate-50 focus:bg-white" value={formData.collegeId} onChange={handleCollegeChange} disabled={!formData.district}>
                         <option value="">Select College</option>
                         {formData.collegeId && !isCollegeInList && (
-                          <option value={formData.collegeId}>{extractName(c) || 'Loading...'}</option>
+                          <option value={formData.collegeId}>{extractName(initialCollege) || 'Loading...'}</option>
                         )}
                         {locationData.colleges?.map((col, i) => (
                           <option key={i} value={extractId(col)}>{extractName(col) || extractId(col)}</option>
