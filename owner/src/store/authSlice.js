@@ -55,8 +55,8 @@ export const resendOwnerOtp = createAsyncThunk('auth/resendOtp', async (_, { rej
 // 4. LOGIN
 export const loginOwner = createAsyncThunk('auth/loginOwner', async ({ email, password }, { rejectWithValue }) => {
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    const res = await api.get('/auth/owner/profile'); 
+    await signInWithEmailAndPassword(auth, email, password); 
+    const res = await api.get('/profiles/owner'); 
     return res.data.data;
   } catch (err) { 
     return rejectWithValue(err.response?.data?.message || "Invalid Email or Password"); 
@@ -74,9 +74,10 @@ export const logoutOwner = createAsyncThunk('auth/logoutOwner', async () => {
   try { await signOut(auth); return null; } catch  { return null; }
 });
 
+// 7. RESTORE SESSION
 export const restoreSession = createAsyncThunk('auth/restoreSession', async (_, { rejectWithValue }) => {
-  try {
-    const res = await api.get('/auth/owner/profile'); 
+  try { 
+    const res = await api.get('/profiles/owner'); 
     return res.data.data;
   } catch (err) { 
     return rejectWithValue(err.response?.data?.message || err.message); 

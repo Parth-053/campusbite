@@ -46,7 +46,12 @@ const canteenSchema = new mongoose.Schema({
   allowedHostels: [{ 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Hostel' 
-  }] 
+  }],
+   
+  isDeleted: {
+    type: Boolean,
+    default: false
+  }
   
 }, { timestamps: true });
 
