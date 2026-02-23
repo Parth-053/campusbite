@@ -6,12 +6,15 @@ import { ROLES } from "../../constants/roles.js";
 
 const router = express.Router();
 
+// Public Route
 router.get("/common/:collegeId", getCanteens);
 
-router.use("/admin", verifyToken, authorizeRoles(ROLES.ADMIN));
-router.get("/admin", getAdminCanteens);
-router.put("/admin/:id", updateCanteen);
-router.delete("/admin/:id", deleteCanteen);
-router.patch("/admin/:id/status", toggleCanteenStatus);
+// 🚀 FIXED: Explicit admin auth injection
+const adminAuth = [verifyToken, authorizeRoles(ROLES.ADMIN)];
+
+router.get("/admin", adminAuth, getAdminCanteens);
+router.put("/admin/:id", adminAuth, updateCanteen);
+router.delete("/admin/:id", adminAuth, deleteCanteen);
+router.patch("/admin/:id/status", adminAuth, toggleCanteenStatus);
 
 export default router;

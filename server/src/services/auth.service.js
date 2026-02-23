@@ -123,31 +123,37 @@ export const ownerLoginService = async (firebaseUid) => {
 };
 
 // ==================== CUSTOMER SERVICES ====================
+
+export const sendCustomerOtpService = async (email, name) => {
+  const existingCustomer = await Customer.findOne({ email });
+  if (existingCustomer) throw new ApiError(409, "An account with this email already exists.");
+  
+  await sendOtpService(email, name);
+  return true;
+};
+
 export const customerRegisterService = async (customerData) => {
   const existingCustomer = await Customer.findOne({ 
     $or: [{ email: customerData.email }, { firebaseUid: customerData.firebaseUid }] 
   });
-  if (existingCustomer) throw new ApiError(409, "Customer with this email or Firebase UID already exists");
+  if (existingCustomer) throw new ApiError(409, "Customer already exists");
 
   const newCustomer = await Customer.create({
     firebaseUid: customerData.firebaseUid, 
     name: customerData.name, 
     email: customerData.email,
     phone: customerData.phone, 
-    gender: customerData.gender, 
-    academicYear: customerData.academicYear,
     college: customerData.college || null, 
-    hostel: customerData.hostel || "", 
+    hostel: customerData.hostel, 
     roomNo: customerData.roomNo || "",
+    isVerified: true 
   });
- 
-  await sendOtpService(customerData.email, customerData.name);
 
   return newCustomer;
 };
 
 export const customerLoginService = async (firebaseUid) => {
-  const customer = await Customer.findOne({ firebaseUid }).populate("college", "name");
-  if (!customer) throw new ApiError(404, "Customer profile not found. Please register first.");
+  const customer = await Customer.findOne({ firebaseUid }).populate("college", "name").populate("hostel", "name");
+  if (!customer) throw new ApiError(404, "Customer not found in database. Please register.");
   return customer;
 };

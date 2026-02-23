@@ -3,6 +3,8 @@ import { Users, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Skeleton from '../common/Skeleton';
 
+const safeName = (item) => (item && typeof item === 'object' ? item.name : item) || 'N/A';
+
 const UsersTable = ({ users, isLoading }) => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,7 +14,7 @@ const UsersTable = ({ users, isLoading }) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = users.slice(startIndex, startIndex + itemsPerPage);
 
-  const getStatusColor = (status) => status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+  const getStatusColor = (isDeleted) => !isDeleted ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
@@ -40,18 +42,18 @@ const UsersTable = ({ users, isLoading }) => {
               ))
             ) : currentData.length > 0 ? (
               currentData.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={user._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm font-bold text-gray-900">{user.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{user.email}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{user.college}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{safeName(user.college)}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase rounded-full ${getStatusColor(user.status)}`}>
-                      {user.status === 'Active' ? 'Active' : 'Blocked'}
+                    <span className={`px-2.5 py-1 text-[11px] font-bold uppercase rounded-full ${getStatusColor(user.isDeleted)}`}>
+                      {!user.isDeleted ? 'Active' : 'Blocked'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 
-                      onClick={() => navigate(`/users/${user.id}`)} 
+                      onClick={() => navigate(`/users/${user._id}`)} 
                       className="text-primary bg-indigo-50 p-1.5 rounded-md hover:text-indigo-800 transition-colors inline-block" 
                       title="View Details"
                     >

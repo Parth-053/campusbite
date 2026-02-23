@@ -1,9 +1,7 @@
 import React from 'react';
 import { Filter } from 'lucide-react';
 
-const UserFilters = ({ filterData, filters, setFilters }) => {
-  const { colleges } = filterData;
-
+const UserFilters = ({ colleges, filters, setFilters }) => {
   const handleChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };

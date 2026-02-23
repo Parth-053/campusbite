@@ -9,6 +9,7 @@ import orderReducer from './orderSlice';
 import menuReducer from './menuSlice';
 import orderHistoryReducer from './orderHistorySlice';
 import notifications from './notificationSlice';
+import profileReducer from './profileSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,5 +23,6 @@ export const store = configureStore({
     menu: menuReducer,
     orderHistory: orderHistoryReducer,
     notifications: notifications,
+    profile: profileReducer,
   },
 });

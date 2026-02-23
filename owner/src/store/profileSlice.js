@@ -2,23 +2,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../api/axios';
 import { restoreSession } from './authSlice'; 
-
-// Handle FormData for Image Uploads properly
+ 
 export const updateProfileData = createAsyncThunk('profile/updateData', async (updatedData, { rejectWithValue, dispatch }) => {
   try {
-    const config = updatedData instanceof FormData 
-      ? { headers: { 'Content-Type': 'multipart/form-data' } } 
-      : {};
-
-    const res = await api.patch('/profiles/owner', updatedData, config);
+    // Sidha request bhejiye bina config ke
+    const res = await api.patch('/profiles/owner', updatedData);
+    
     dispatch(restoreSession()); 
     return res.data.data;
   } catch (err) { 
     return rejectWithValue(err.response?.data?.message || 'Failed to update profile.'); 
   }
 });
-
-// 🚀 FIXED: Removed unused 'rejectWithValue'
+ 
 export const updateStoreImage = createAsyncThunk('profile/updateImage', async (imageUrl) => {
   return imageUrl; 
 });

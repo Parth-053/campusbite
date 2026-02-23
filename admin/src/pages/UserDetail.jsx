@@ -1,36 +1,42 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { ArrowLeft, Ban, Trash2, User, Mail, Phone, Calendar, School, ShoppingBag } from 'lucide-react';
-
-import { fetchUserById, toggleUserStatus, deleteUser, clearCurrentUser } from '../store/userSlice';
+import { ArrowLeft, Ban, Trash2, User, Mail, Phone, Calendar, School, ShoppingBag, MapPin } from 'lucide-react';
+import { fetchCustomers, setCurrentCustomer, clearCurrentCustomer, toggleCustomerStatus, deleteCustomer } from '../store/customerSlice';
 import Skeleton from '../components/common/Skeleton';
+
+const safeName = (item) => (item && typeof item === 'object' ? item.name : item) || 'N/A';
 
 const UserDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const { currentUser: user, isDetailLoading } = useSelector(state => state.user);
+  const { customers, currentCustomer: user, isLoading } = useSelector(state => state.customer);
 
   useEffect(() => {
-    dispatch(fetchUserById(id));
-    return () => dispatch(clearCurrentUser());
-  }, [dispatch, id]);
+    // If customers array is empty (e.g., direct page reload), fetch them first
+    if (customers.length === 0) {
+      dispatch(fetchCustomers()).then(() => dispatch(setCurrentCustomer(id)));
+    } else {
+      dispatch(setCurrentCustomer(id));
+    }
+    return () => dispatch(clearCurrentCustomer());
+  }, [dispatch, id, customers.length]);
 
   const handleToggleBlock = () => {
-    if (window.confirm(`Are you sure you want to ${user.status === 'Active' ? 'block' : 'unblock'} this user?`)) {
-      dispatch(toggleUserStatus(user.id));
+    if (window.confirm(`Are you sure you want to ${!user.isDeleted ? 'block' : 'unblock'} this user?`)) {
+      dispatch(toggleCustomerStatus(user._id));
     }
   };
 
   const handleDelete = () => {
     if (window.confirm("Permanently delete this user? This action cannot be undone.")) {
-      dispatch(deleteUser(user.id)).then(() => navigate('/users', { replace: true }));
+      dispatch(deleteCustomer(user._id)).then(() => navigate('/users', { replace: true }));
     }
   };
 
-  if (isDetailLoading || !user) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white h-16 shadow-sm sticky top-0" />
@@ -39,12 +45,10 @@ const UserDetail = () => {
     );
   }
 
-  const isBlocked = user.status === 'Inactive';
+  const isBlocked = user.isDeleted;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
-      {/* Top Standalone Header */}
       <div className="bg-white h-16 flex items-center shadow-sm px-4 sticky top-0 z-30 border-b border-gray-200">
         <button onClick={() => navigate(-1)} className="p-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
           <ArrowLeft size={22} />
@@ -54,11 +58,10 @@ const UserDetail = () => {
 
       <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6 pb-20 animate-in fade-in duration-300">
         
-        {/* Banner Card & Actions */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-2xl border border-primary/20 shrink-0">
-              {user.name.charAt(0)}
+              {user.name?.charAt(0) || 'U'}
             </div>
             <div>
               <div className="flex items-center gap-3 mb-1">
@@ -67,7 +70,7 @@ const UserDetail = () => {
                   {isBlocked ? 'Blocked' : 'Active'}
                 </span>
               </div>
-              <p className="text-gray-500 text-sm">{user.id}</p>
+              <p className="text-gray-500 text-sm">ID: {user._id}</p>
             </div>
           </div>
           
@@ -87,65 +90,22 @@ const UserDetail = () => {
           </div>
         </div>
 
-        {/* Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
             <h3 className="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider flex items-center gap-2"><User size={16}/> Contact Information</h3>
             <div className="space-y-4 text-sm">
               <div className="flex justify-between border-b pb-2"><span className="text-gray-500 flex items-center gap-2"><Mail size={14}/> Email</span><span className="font-bold text-gray-900">{user.email}</span></div>
-              <div className="flex justify-between pb-2"><span className="text-gray-500 flex items-center gap-2"><Phone size={14}/> Phone</span><span className="font-bold text-gray-900">{user.phone}</span></div>
+              <div className="flex justify-between pb-2"><span className="text-gray-500 flex items-center gap-2"><Phone size={14}/> Phone</span><span className="font-bold text-gray-900">{user.phone || 'N/A'}</span></div>
             </div>
           </div>
           
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h3 className="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider flex items-center gap-2"><School size={16}/> Academic Info</h3>
+            <h3 className="text-sm font-bold text-gray-500 uppercase mb-4 tracking-wider flex items-center gap-2"><School size={16}/> Campus Info</h3>
             <div className="space-y-4 text-sm">
-              <div className="flex justify-between border-b pb-2"><span className="text-gray-500 flex items-center gap-2"><School size={14}/> College</span><span className="font-bold text-gray-900 text-right max-w-[60%]">{user.college}</span></div>
-              <div className="flex justify-between pb-2"><span className="text-gray-500 flex items-center gap-2"><Calendar size={14}/> Joined Date</span><span className="font-bold text-gray-900">{user.joinedDate}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500 flex items-center gap-2"><School size={14}/> College</span><span className="font-bold text-gray-900 text-right max-w-[60%]">{safeName(user.college)}</span></div>
+              <div className="flex justify-between border-b pb-2"><span className="text-gray-500 flex items-center gap-2"><MapPin size={14}/> Hostel</span><span className="font-bold text-gray-900">{safeName(user.hostel)} (Room {user.roomNo || 'N/A'})</span></div>
+              <div className="flex justify-between pb-2"><span className="text-gray-500 flex items-center gap-2"><Calendar size={14}/> Joined On</span><span className="font-bold text-gray-900">{new Date(user.createdAt).toLocaleDateString()}</span></div>
             </div>
-          </div>
-        </div>
-
-        {/* Order History Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 flex items-center gap-2">
-            <ShoppingBag size={18} className="text-primary" />
-            <h3 className="text-base font-bold text-gray-800">Order History ({user.orders.length})</h3>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Order ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Canteen</th>
-                  <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Date</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Amount</th>
-                  <th className="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {user.orders.length > 0 ? (
-                  user.orders.map(order => (
-                    <tr key={order.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-3 text-sm text-gray-900">#{order.id}</td>
-                      <td className="px-6 py-3 text-sm text-gray-600">{order.canteen}</td>
-                      <td className="px-6 py-3 text-sm text-gray-500">{order.date}</td>
-                      <td className="px-6 py-3 text-sm font-bold text-gray-900 text-right">${order.amount}</td>
-                      <td className="px-6 py-3 text-right">
-                        <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded ${order.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {order.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-gray-400 text-sm">No past orders found.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
           </div>
         </div>
 

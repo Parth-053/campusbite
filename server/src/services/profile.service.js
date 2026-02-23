@@ -10,16 +10,10 @@ export const getOwnerProfileService = async (ownerId) => {
   const owner = await Owner.findById(ownerId);
   if (!owner) throw new ApiError(404, "Owner profile not found");
 
-  // 🚀 FIXED: Correct Nested Deep Populate (College -> District -> State)
   const canteen = await Canteen.findOne({ owner: ownerId })
     .populate({
       path: "college",
-      populate: {
-        path: "district",
-        populate: {
-          path: "state"
-        }
-      }
+      populate: { path: "district", populate: { path: "state" } }
     })
     .populate("hostel")
     .populate("allowedHostels");
@@ -32,7 +26,7 @@ export const getCanteenByOwnerIdService = async (ownerId) => {
 };
 
 export const updateOwnerProfileService = async (ownerId, updateData, imagePath) => {
-  const { name, phone, upiId, canteenName, openingTime, closingTime, collegeId, hostelId, allowedHostels } = updateData;
+  const { name, phone, upiId, canteenName, openingTime, closingTime, collegeId, hostelId, allowedHostels, isOpen } = updateData;
 
   const ownerUpdate = {};
   if (name) ownerUpdate.name = name;
@@ -47,6 +41,9 @@ export const updateOwnerProfileService = async (ownerId, updateData, imagePath) 
   if (openingTime) canteenUpdate.openingTime = openingTime;
   if (closingTime) canteenUpdate.closingTime = closingTime;
   
+  // Now isOpen will no longer throw an undefined error
+  if (isOpen !== undefined) canteenUpdate.isOpen = isOpen === 'true' || isOpen === true;
+  
   if (collegeId) canteenUpdate.college = collegeId;
   if (hostelId) canteenUpdate.hostel = hostelId;
   if (allowedHostels) {
@@ -55,7 +52,6 @@ export const updateOwnerProfileService = async (ownerId, updateData, imagePath) 
   
   if (imagePath) canteenUpdate.image = imagePath; 
 
-  // 🚀 FIXED: Correct Nested Deep Populate here too
   const updatedCanteen = await Canteen.findOneAndUpdate(
     { owner: ownerId },
     canteenUpdate,
@@ -63,12 +59,7 @@ export const updateOwnerProfileService = async (ownerId, updateData, imagePath) 
   )
   .populate({
     path: "college",
-    populate: {
-      path: "district",
-      populate: {
-        path: "state"
-      }
-    }
+    populate: { path: "district", populate: { path: "state" } }
   })
   .populate("hostel")
   .populate("allowedHostels");
@@ -87,17 +78,54 @@ export const softDeleteOwnerProfileService = async (ownerId) => {
 // CUSTOMER PROFILE SERVICES
 // ==========================================
 export const getCustomerProfileService = async (customerId) => {
-  const customer = await Customer.findById(customerId).populate("college", "name");
+  const customer = await Customer.findOne({ 
+    $or: [{ _id: customerId }, { firebaseUid: customerId }],
+    isDeleted: { $ne: true } 
+  })
+  .populate({
+    path: "college",
+    populate: { path: "district", populate: { path: "state" } }
+  })
+  .populate("hostel");
+
   if (!customer) throw new ApiError(404, "Customer profile not found");
   return customer;
 };
 
-export const updateCustomerProfileService = async (customerId, updateData) => {
-  const { name, phone, hostel, roomNo } = updateData;
-  const updatedCustomer = await Customer.findByIdAndUpdate(
-    customerId, { name, phone, hostel, roomNo }, { new: true, runValidators: true }
-  ).populate("college", "name");
+export const updateCustomerProfileService = async (customerId, updateData, imagePath) => {
+  const { name, phone, college, hostel, roomNo } = updateData;
+
+  const customerUpdate = {};
+  if (name) customerUpdate.name = name;
+  if (phone) customerUpdate.phone = phone;
+  if (college) customerUpdate.college = college;
+  if (hostel) customerUpdate.hostel = hostel;
+  if (roomNo) customerUpdate.roomNo = roomNo;
+  
+  if (imagePath) customerUpdate.profileImage = imagePath; 
+
+  const updatedCustomer = await Customer.findOneAndUpdate(
+    { $or: [{ _id: customerId }, { firebaseUid: customerId }] },
+    customerUpdate, 
+    { new: true, runValidators: true }
+  )
+  .populate({
+    path: "college",
+    populate: { path: "district", populate: { path: "state" } }
+  })
+  .populate("hostel");
 
   if (!updatedCustomer) throw new ApiError(404, "Customer not found");
   return updatedCustomer;
+};
+
+export const softDeleteCustomerProfileService = async (customerId) => {
+  const customer = await Customer.findOneAndUpdate(
+    { $or: [{ _id: customerId }, { firebaseUid: customerId }] },
+    { isDeleted: true },
+    { new: true }
+  );
+  
+  if (!customer) throw new ApiError(404, "Customer not found");
+  return true;
 };

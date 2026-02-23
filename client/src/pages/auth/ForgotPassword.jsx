@@ -18,6 +18,7 @@ const ForgotPassword = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     dispatch(forgotPassword(email)).then((res) => {
+      // res.error will be undefined if the thunk succeeds
       if (!res.error) setIsSent(true);
     });
   };
@@ -33,15 +34,15 @@ const ForgotPassword = () => {
             </div>
             <h1 className="text-2xl font-black text-gray-900 mb-2">Check your email</h1>
             <p className="text-gray-500 text-sm mb-8">
-              We've sent password reset instructions to <span className="font-bold text-gray-800">{email}</span>.
+              We've sent a password reset link to <span className="font-bold text-gray-800">{email}</span>. Please check your inbox.
             </p>
-            <Link to="/login" className="w-full bg-gray-900 text-white font-bold py-3 rounded-lg flex items-center justify-center hover:bg-gray-800">
-              Return to Login
+            <Link to="/login" className="w-full bg-primary text-white font-bold py-3 rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-colors">
+              Back to Login
             </Link>
           </div>
         ) : (
           <>
-            <div className="text-center mb-6">
+            <div className="text-center mb-8">
               <h1 className="text-2xl font-black text-gray-900 mb-2">Reset Password</h1>
               <p className="text-gray-500 text-sm">Enter your email and we'll send you a reset link.</p>
             </div>
@@ -61,9 +62,9 @@ const ForgotPassword = () => {
 
               <button 
                 type="submit" disabled={isLoading}
-                className="w-full bg-primary text-white font-bold py-3 rounded-lg flex items-center justify-center hover:bg-indigo-700 disabled:opacity-70"
+                className="w-full bg-primary text-white font-bold py-3 rounded-lg flex items-center justify-center hover:bg-indigo-700 disabled:opacity-70 transition-colors"
               >
-                {isLoading ? 'Sending...' : 'Send Reset Link'}
+                {isLoading ? 'Sending Link...' : 'Send Reset Link'}
               </button>
             </form>
 

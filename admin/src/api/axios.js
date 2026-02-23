@@ -1,22 +1,19 @@
 import axios from 'axios';
-import { auth } from '../config/firebase';  
 
 const api = axios.create({
-  baseURL: 'http://localhost:8001/api/v1',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
-
+ 
 api.interceptors.request.use(
-  async (config) => {
-    await auth.authStateReady(); 
+  (config) => { 
+    const token = localStorage.getItem('token'); 
     
-    const user = auth.currentUser;
-    
-    if (user) {
-      const token = await user.getIdToken();
+    if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      config.headers['x-user-role'] = 'admin';
     }
-    
     return config;
   },
   (error) => {

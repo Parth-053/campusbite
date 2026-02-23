@@ -29,13 +29,11 @@ export const registerOwnerSchema = Joi.object({
 });
 
 export const registerCustomerSchema = Joi.object({
-  firebaseUid: Joi.string().required(),
   name: Joi.string().trim().min(3).max(50).required(),
   email: Joi.string().pattern(EMAIL_REGEX).required(),
   phone: Joi.string().pattern(MOBILE_REGEX).required(),
-  academicYear: Joi.number().integer().min(1).max(5).required(), 
-  college: Joi.string().pattern(MONGO_ID_REGEX).required().messages({ "string.pattern.base": "Invalid College ID" }),
-  hostel: Joi.string().trim().optional().allow(""),
+  college: Joi.string().pattern(MONGO_ID_REGEX).allow("", null).optional().messages({ "string.pattern.base": "Invalid College ID" }),
+  hostel: Joi.string().pattern(MONGO_ID_REGEX).required().messages({ "string.pattern.base": "Invalid Hostel ID" }),
   roomNo: Joi.string().trim().optional().allow(""),
 });
 

@@ -7,6 +7,7 @@ import { ApiError } from "../utils/ApiError.js";
 export const getCanteensByCollegeService = async (collegeId) => {
   return await Canteen.find({ college: collegeId, isActive: true })
     .populate("college", "name") 
+    .populate("hostel", "name")  
     .populate("allowedHostels", "name") 
     .sort({ name: 1 });
 };

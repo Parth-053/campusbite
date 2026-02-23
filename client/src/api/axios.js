@@ -1,22 +1,25 @@
 import axios from 'axios';
-import { auth } from '../config/firebase.js';
+import { auth } from '../config/firebase';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 api.interceptors.request.use(
   async (config) => {
     const user = auth.currentUser;
     if (user) {
-      const token = await user.getIdToken(); 
+      const token = await user.getIdToken();
       config.headers.Authorization = `Bearer ${token}`;
-      config.headers['x-user-role'] = 'customer';  
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
 export default api;

@@ -3,7 +3,7 @@ import authReducer from './authSlice';
 import collegeReducer from './collegeSlice';
 import hostelReducer from './hostelSlice';
 import canteenReducer from './canteenSlice';
-import userReducer from './userSlice';
+import customerReducer from './customerSlice';
 import orderReducer from './orderSlice';
 import analyticsReducer from './analyticsSlice';
 import financeReducer from './financeSlice';
@@ -17,7 +17,7 @@ export const store = configureStore({
     college: collegeReducer,
     hostel: hostelReducer,
     canteen: canteenReducer,
-    user: userReducer,
+    customer: customerReducer,
     order: orderReducer,
     analytics: analyticsReducer,
     finance: financeReducer,

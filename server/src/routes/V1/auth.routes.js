@@ -7,7 +7,7 @@ import { upload } from "../../middleware/multer.middleware.js";
 import { registerOwnerSchema, registerCustomerSchema } from "../../validations/auth.validation.js";
 import { loginAdmin } from "../../controllers/admin/auth.controller.js";
 import { registerOwner, loginOwner, getOwnerProfile, verifyOwnerEmail, resendOtp } from "../../controllers/owner/auth.controller.js";
-import { registerCustomer, loginCustomer } from "../../controllers/customer/auth.controller.js";
+import { registerCustomer, loginCustomer, sendCustomerOtp, verifyCustomerOtpOnly } from "../../controllers/customer/auth.controller.js";
 
 const router = express.Router();
 
@@ -22,7 +22,9 @@ const parseFormDataPayload = (req, res, next) => {
 
 router.post("/admin/login", verifyToken, authorizeRoles(ROLES.ADMIN), loginAdmin);
 
+// ==========================================
 // OWNER ROUTES
+// ==========================================
 router.post("/owner/register", verifyFirebaseToken, upload.single("image"), parseFormDataPayload, validate(registerOwnerSchema), registerOwner);
 router.post("/owner/verify-email", verifyFirebaseToken, verifyOwnerEmail); 
 router.post("/owner/resend-otp", verifyFirebaseToken, resendOtp); 
@@ -30,8 +32,13 @@ router.post("/owner/resend-otp", verifyFirebaseToken, resendOtp);
 router.post("/owner/login", verifyToken, authorizeRoles(ROLES.OWNER), loginOwner);
 router.get("/owner/profile", verifyToken, authorizeRoles(ROLES.OWNER), getOwnerProfile); 
 
+// ==========================================
 // CUSTOMER ROUTES
-router.post("/customer/register", verifyFirebaseToken, validate(registerCustomerSchema), registerCustomer);
-router.post("/customer/login", verifyToken, authorizeRoles(ROLES.CUSTOMER), loginCustomer);
+// ==========================================
+router.post("/customer/send-otp", sendCustomerOtp); 
+router.post("/customer/verify-otp-only", verifyCustomerOtpOnly); 
+
+router.post("/customer/register", verifyFirebaseToken, validate(registerCustomerSchema), registerCustomer); 
+router.post("/customer/login", verifyFirebaseToken, loginCustomer);
 
 export default router;

@@ -1,15 +1,34 @@
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
+import { Toaster } from 'react-hot-toast';
+import useAuth from './hooks/useAuth'; 
 
-function App() {
+const AppContent = () => {
+  useAuth(); 
+
   return (
     <BrowserRouter>
-      <div className="app-layout">
-        <AppRoutes />
-      </div>
+      <AppRoutes />
+      <Toaster 
+        position="top-center" 
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '10px',
+          },
+        }}
+      />
     </BrowserRouter>
   );
-}
+};
+
+const App = () => {
+  return (
+    <AppContent />
+  );
+};
 
 export default App;
