@@ -10,6 +10,7 @@ import financeReducer from './financeSlice';
 import dashboardReducer from './dashboardSlice';
 import settingsReducer from './settingsSlice';
 import locationReducer from './locationSlice';
+import categoryReducer from './categorySlice';
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     settings: settingsReducer,
     location: locationReducer,
+    category: categoryReducer,
   },
 });

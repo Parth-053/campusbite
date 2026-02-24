@@ -16,6 +16,7 @@ import OrderDetail from '../pages/OrderDetail';
 import Analytics from "../pages/Analytics";
 import Finance from "../pages/Finance";
 import Settings from "../pages/Settings";
+import Categories from "../pages/Categories";
 
 // Components
 import ProtectedRoute from "../components/common/ProtectedRoute";
@@ -71,6 +72,7 @@ const AppRoutes = () => {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/finance" element={<Finance />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/categories" element={<Categories />} />
       </Route>
 
       {/* Fallback Route */}

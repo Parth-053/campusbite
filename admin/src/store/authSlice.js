@@ -11,9 +11,10 @@ export const loginAdmin = createAsyncThunk(
       const user = userCredential.user;
        
       const token = await user.getIdToken();
+      localStorage.setItem('token', token); // 🚀 FIXED: Save token to localStorage on login
        
       const response = await api.post('/auth/admin/login', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'admin' }
       });
       
       return response.data.data;  
@@ -24,12 +25,13 @@ export const loginAdmin = createAsyncThunk(
   }
 );
 
-// 2. Async Thunk for Logout
 export const logoutAdmin = createAsyncThunk(
   'auth/logoutAdmin',
   async (_, { rejectWithValue }) => {
     try {
       await signOut(auth);
+      localStorage.removeItem('token'); // 🚀 FIXED: Remove token on logout
+      localStorage.removeItem('admin');
       return null;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -70,7 +72,6 @@ const authSlice = createSlice({
       // Logout Cases
       .addCase(logoutAdmin.fulfilled, (state) => {
         state.admin = null;
-        localStorage.removeItem('admin');
       });
   },
 });

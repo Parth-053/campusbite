@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
-  LayoutDashboard, School, Coffee, Users, UserCheck,Building,
+  LayoutDashboard, School, Coffee, Users, UserCheck,Building, LayoutGrid,
   ShoppingBag, BarChart3, Wallet, Settings, LogOut, X 
 } from 'lucide-react';
 import { useDispatch } from 'react-redux';
@@ -16,6 +16,7 @@ const Sidebar = ({ isOpen, closeSidebar }) => {
     { path: '/hostels', label: 'Hostels', icon: Building },
     { path: '/canteens', label: 'Canteens', icon: Coffee },
     { path: '/users', label: 'Users', icon: Users },
+    { path: '/categories', label: 'Categories', icon: LayoutGrid },
     { path: '/orders', label: 'Orders', icon: ShoppingBag },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/finance', label: 'Finance', icon: Wallet },
