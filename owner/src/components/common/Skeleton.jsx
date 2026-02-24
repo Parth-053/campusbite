@@ -1,11 +1,10 @@
 import React from 'react';
 
-const Skeleton = ({ className }) => {
+const Skeleton = ({ className, circle = false }) => {
   return (
-    <div className={`relative overflow-hidden bg-slate-200 rounded-md ${className}`}>
-      {/* Sparkling/Shimmer Effect */}
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/50 to-transparent"></div>
-    </div>
+    <div 
+      className={`animate-pulse bg-borderCol ${circle ? 'rounded-full' : 'rounded-md'} ${className}`}
+    ></div>
   );
 };
 

@@ -2,38 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  @keyframes shimmer {
-    100% {
-      transform: translateX(100%);
-    }
-  }
-}
-
-@layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 active:scale-95;
-  }
-  .btn-primary {
-    @apply bg-primary text-white hover:bg-blue-700 shadow-md shadow-blue-200;
-  }
-  .btn-secondary {
-    @apply bg-white border border-slate-300 text-slate-700 hover:bg-slate-50;
-  }
-  .btn-danger {
-    @apply bg-danger text-white hover:bg-red-600 shadow-md shadow-red-200;
-  }
-  .card {
-    @apply bg-white p-6 rounded-xl shadow-sm border border-slate-200;
-  }
-  .input-field {
-    @apply w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all;
-  }
-  .badge {
-    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wide;
-  }
-}
-
 body {
-  @apply bg-background text-slate-800 font-sans antialiased;
+  @apply bg-background text-textDark font-sans antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary-light;
 }
