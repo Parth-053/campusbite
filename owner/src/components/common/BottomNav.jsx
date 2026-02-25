@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, ShoppingBag, UtensilsCrossed, BarChart3, User } from 'lucide-react';
 
 const mobileNavItems = [
@@ -11,6 +11,13 @@ const mobileNavItems = [
 ];
 
 const BottomNav = () => {
+  const location = useLocation();
+  const path = location.pathname;
+ 
+  if (path.includes('/transactions') || path.includes('/notifications')) {
+    return null;
+  }
+
   return (
     <div className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-borderCol shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe">
       <div className="flex justify-around items-center h-16 px-1 sm:px-2">

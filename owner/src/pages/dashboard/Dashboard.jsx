@@ -1,24 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { fetchDashboardData } from '../../store/dashboardSlice';
-import { updateProfileData } from '../../store/profileSlice';  
+import { useNavigate } from 'react-router-dom';
+import { fetchDashboardData, toggleCanteenStatus, setOptimisticStatus } from '../../store/dashboardSlice';
 import Skeleton from '../../components/common/Skeleton';
-import { DollarSign, ShoppingBag, Clock, CheckCircle, Power, Loader2 } from 'lucide-react';
+import { DollarSign, ShoppingBag, Clock, CheckCircle, Store, ChevronRight, PowerOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// StatCard Component
-const StatCard = ({ title, value, icon, color, loading }) => {
-  if (loading) {
-    return <Skeleton className="h-32 w-full rounded-xl" />;
-  }
+const StatCard = ({ title, value, icon, colorClass, loading }) => {
+  if (loading) return <Skeleton className="h-24 sm:h-32 w-full rounded-2xl" />;
+  const textColor = colorClass.split(' ').find(c => c.startsWith('text-'));
+
   return (
-    <div className="card flex items-center gap-4 hover:-translate-y-1 transition-transform duration-200">
-      <div className={`p-4 rounded-full ${color} bg-opacity-10 text-${color.split('-')[1]}-600`}>
-        {icon}
+    <div className="relative overflow-hidden bg-surface p-4 sm:p-6 rounded-2xl border border-borderCol shadow-sm hover:shadow-md transition-all duration-300 group">
+      <div className="relative z-10">
+        <p className="text-textLight text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 sm:mb-2 truncate">{title}</p>
+        <h3 className="text-xl sm:text-3xl font-black text-textDark truncate">{value}</h3>
       </div>
-      <div>
-        <p className="text-slate-500 text-sm font-medium">{title}</p>
-        <h3 className="text-2xl font-bold text-slate-800 mt-1">{value}</h3>
+      <div className={`absolute -bottom-3 -right-3 sm:-bottom-5 sm:-right-5 w-20 h-20 sm:w-28 sm:h-28 opacity-[0.12] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-500 ease-out flex items-center justify-center ${textColor}`}>
+        {React.cloneElement(icon, { size: '100%', strokeWidth: 2 })}
       </div>
     </div>
   );
@@ -26,134 +25,174 @@ const StatCard = ({ title, value, icon, color, loading }) => {
 
 const Dashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
-  // Selectors
-  const { ownerData } = useSelector(state => state.auth);
-  const { stats, revenueTrend, topItems, isLoading } = useSelector(state => state.dashboard);
-  
-  // Local state to manage toggle loading to prevent double-clicks
-  const [isToggling, setIsToggling] = useState(false);
+  const { isOpen, stats, recentOrders, revenueTrend, isLoading } = useSelector(state => state.dashboard);
 
   useEffect(() => {
     dispatch(fetchDashboardData());
+    const intervalId = setInterval(() => { dispatch(fetchDashboardData()); }, 30000); 
+    return () => clearInterval(intervalId);
   }, [dispatch]);
  
   const handleToggleStatus = async () => {
-    if (!ownerData?.canteen) return;
-    setIsToggling(true);
-    
-    const currentStatus = ownerData.canteen.isOpen ?? true;
+    const currentStatus = isOpen;
     const newStatus = !currentStatus;
+     
+    const actionText = newStatus ? "OPEN" : "CLOSE";
+    const isConfirmed = window.confirm(`Are you sure you want to ${actionText} the canteen?`);
+     
+    if (!isConfirmed) return;
+ 
+    dispatch(setOptimisticStatus(newStatus));
 
     try { 
-      await dispatch(updateProfileData({ isOpen: newStatus })).unwrap();
+      await dispatch(toggleCanteenStatus()).unwrap();
       toast.success(`Canteen is now ${newStatus ? 'OPEN' : 'CLOSED'}`);
     } catch {
-      toast.error("Failed to update status");
-    } finally {
-      setIsToggling(false);
+      dispatch(setOptimisticStatus(currentStatus));
+      toast.error("Failed to update status. Please try again.");
     }
   };
 
-  const isCanteenOpen = ownerData?.canteen?.isOpen ?? true;
+  const maxRevenue = revenueTrend.length > 0 ? Math.max(...revenueTrend.map(d => d.value)) : 100;
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0">
+    <div className="space-y-6 pb-20 md:pb-0 animate-in fade-in duration-300">
       
-      {/* Top Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">Dashboard</h2>
-          <p className="text-sm text-slate-500">Welcome back, {ownerData?.name?.split(' ')[0] || 'Owner'}!</p>
-        </div>
- 
-        <button
-          onClick={handleToggleStatus}
-          disabled={isToggling}
-          className={`
-            group flex items-center gap-3 px-5 py-2.5 rounded-full font-bold transition-all duration-300 shadow-sm
-            ${isCanteenOpen 
-              ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100' 
-              : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'}
-            disabled:opacity-70
-          `}
-        >
-          {isToggling ? (
-             <Loader2 size={18} className="animate-spin" />
-          ) : (
-             <div className={`w-8 h-4 rounded-full relative transition-colors duration-300 ${isCanteenOpen ? 'bg-green-500' : 'bg-slate-300'}`}>
-                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform duration-300 ${isCanteenOpen ? 'translate-x-4' : 'translate-x-0.5'}`}></div>
-             </div>
-          )}
+      {/* 1. HERO TOGGLE BUTTON */}
+      <button
+        onClick={handleToggleStatus}
+        disabled={isLoading && stats.totalOrders === 0} 
+        className={`w-full relative overflow-hidden rounded-2xl p-5 sm:p-6 md:p-8 text-left transition-all duration-300 shadow-sm border
+          ${isOpen ? 'bg-success/10 border-success/30 text-success' : 'bg-background border-borderCol text-textLight hover:bg-borderCol/50'}
+        `}
+      >
+        <div className="flex items-center justify-between relative z-10 gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className={`p-3 sm:p-4 rounded-full shrink-0 ${isOpen ? 'bg-success text-white shadow-md' : 'bg-surface border border-borderCol text-textLight'}`}>
+              <Store className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-textDark tracking-tight">
+                {isOpen ? 'Opened Canteen' : 'Closed Canteen'}
+              </h2>
+              <p className={`text-xs sm:text-sm font-medium mt-0.5 sm:mt-1 ${isOpen ? 'text-success' : 'text-textLight'}`}>
+                {isOpen ? 'Your canteen is live and visible to customers.' : 'Click to go online and receive orders.'}
+              </p>
+            </div>
+          </div>
           
-          <span className="uppercase tracking-wide text-sm w-32 text-left">
-            {isToggling ? 'Updating...' : (isCanteenOpen ? 'Canteen Open' : 'Canteen Closed')}
-          </span>
-          {!isToggling && <Power size={18} className={`transition-transform duration-300 ${isCanteenOpen ? 'rotate-0' : 'rotate-180'}`} />}
-        </button>
+          <div className={`shrink-0 w-12 h-7 sm:w-14 sm:h-8 rounded-full flex items-center p-1 transition-colors duration-300 ${isOpen ? 'bg-success' : 'bg-borderCol'}`}>
+            <div className={`w-5 h-5 sm:w-6 sm:h-6 bg-white rounded-full shadow-md transform transition-transform duration-300 ${isOpen ? 'translate-x-5 sm:translate-x-6' : 'translate-x-0'}`}></div>
+          </div>
+        </div>
+      </button>
+
+      {/* 2. STATS GRID */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+        <StatCard title="Revenue" value={`₹${stats?.totalRevenue || 0}`} icon={<DollarSign />} colorClass="bg-success/10 text-success" loading={isLoading} />
+        <StatCard title="Total" value={stats?.totalOrders || 0} icon={<ShoppingBag />} colorClass="bg-primary/10 text-primary" loading={isLoading} />
+        <StatCard title="Pending" value={stats?.pendingOrders || 0} icon={<Clock />} colorClass="bg-alert/10 text-alert" loading={isLoading} />
+        <StatCard title="Completed" value={stats?.completedOrders || 0} icon={<CheckCircle />} colorClass="bg-primary/10 text-primary-dark" loading={isLoading} />
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-        <StatCard title="Total Revenue" value={`₹${stats.totalRevenue}`} icon={<DollarSign size={28} />} color="bg-green-500" loading={isLoading} />
-        <StatCard title="Total Orders" value={stats.totalOrders} icon={<ShoppingBag size={28} />} color="bg-blue-500" loading={isLoading} />
-        <StatCard title="Pending Orders" value={stats.pendingOrders} icon={<Clock size={28} />} color="bg-amber-500" loading={isLoading} />
-        <StatCard title="Completed" value={stats.completedOrders} icon={<CheckCircle size={28} />} color="bg-indigo-500" loading={isLoading} />
-      </div>
-
-      {/* Charts Section */}
+      {/* 3. LATEST ORDERS & REVENUE TREND */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Revenue Trend Chart */}
-        <div className="card h-80 flex flex-col">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Live Revenue Trend</h3>
+        {/* Latest Orders */}
+        <div className="bg-surface border border-borderCol rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col h-full">
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-textDark">Recent Orders</h3>
+              {isOpen && (
+                <span className="relative flex h-2.5 w-2.5 ml-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-success"></span>
+                </span>
+              )}
+            </div>
+            <button onClick={() => navigate('/orders')} className="text-sm font-bold text-primary hover:text-primary-dark flex items-center transition-colors">
+              View All <ChevronRight size={16} />
+            </button>
+          </div>
+
           {isLoading ? (
-            <div className="flex items-end justify-between h-full px-2 gap-2">
-              {[...Array(7)].map((_, i) => (
-                <Skeleton key={i} className="w-full rounded-t-lg" style={{ height: `${(i % 3 + 2) * 20}%` }} />
-              ))}
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="w-full h-16" />)}
+            </div>
+          ) : recentOrders?.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-textLight min-h-[200px]">
+              <ShoppingBag size={40} className="mb-3 opacity-20" />
+              <p className="font-medium">No recent orders yet</p>
             </div>
           ) : (
-            <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-2">
-              {revenueTrend.map((point, index) => (
-                <div key={index} className="w-full flex flex-col items-center gap-2 group cursor-pointer">
-                  <div className="w-full bg-primary/20 hover:bg-primary/80 transition-all duration-500 rounded-t-lg relative" style={{ height: `${point.value}%` }}>
-                    <span className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                      {point.value}%
-                    </span>
+            <div className="space-y-3">
+              {recentOrders.map((order) => (
+                <div key={order._id} className="flex items-center justify-between p-3.5 sm:p-4 bg-background rounded-xl border border-borderCol/50 hover:border-borderCol transition-colors">
+                  <div>
+                    <p className="font-bold text-textDark text-sm">Order #{order._id.slice(-6).toUpperCase()}</p>
+                    <p className="text-xs text-textLight mt-1">{order.items?.length || 0} items • ₹{order.totalAmount}</p>
                   </div>
-                  <span className="text-xs text-slate-400 font-medium">{point.time}</span>
+                  <span className={`px-2.5 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full 
+                    ${order.status === 'Pending' ? 'bg-alert/10 text-alert' : 
+                      order.status === 'Preparing' ? 'bg-warning/20 text-yellow-700' :
+                      order.status === 'Completed' ? 'bg-success/10 text-success' : 
+                      'bg-error/10 text-error'}`}
+                  >
+                    {order.status}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Top Items Chart */}
-        <div className="card h-80 flex flex-col">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">Top Selling Items</h3>
+        {/* Live Hourly Revenue Trend Chart */}
+        <div className="bg-surface border border-borderCol rounded-2xl shadow-sm p-5 sm:p-6 flex flex-col h-[350px]">
+          <div className="flex items-center gap-2 mb-6">
+            <h3 className="text-lg font-bold text-textDark">Today's Live Revenue</h3>
+            {isOpen && <span className="text-xs font-bold bg-success/10 text-success px-2 py-0.5 rounded-md">LIVE</span>}
+          </div>
+          
           {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="flex justify-between items-center">
-                  <Skeleton className="w-32 h-4" />
-                  <Skeleton className="w-48 h-3 rounded-full" />
-                </div>
+            <div className="flex-1 flex items-end justify-between gap-3 pt-4">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="w-full rounded-t-md" style={{ height: `${(i % 3 + 2) * 20}%` }} />
               ))}
             </div>
+          ) : !isOpen ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-textLight">
+              <PowerOff size={40} className="mb-3 opacity-20" />
+              <p className="font-medium text-center">Business Offline.<br/>Go online to track live revenue.</p>
+            </div>
+          ) : revenueTrend?.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-textLight">
+              <p className="font-medium">Waiting for new orders...</p>
+            </div>
           ) : (
-            <div className="space-y-6 overflow-y-auto">
-              {topItems.map((item, index) => (
-                <div key={index} className="group">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium text-slate-600">{item.name}</span>
-                    <span className="font-bold text-slate-800">{item.percentage}%</span>
+            <div className="flex-1 flex items-end justify-around gap-2 md:gap-4 pt-4">
+              {revenueTrend.map((point, index) => {
+                const heightPercent = maxRevenue > 0 ? (point.value / maxRevenue) * 100 : 0;
+                const isCurrentHour = index === revenueTrend.length - 1;
+
+                return (
+                  <div key={index} className="w-full max-w-[40px] flex flex-col items-center gap-3 group relative">
+                    <span className="absolute -top-10 bg-sidebar text-white text-xs font-bold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap pointer-events-none">
+                      ₹{point.value}
+                    </span>
+                    <div className="w-full h-full flex items-end justify-center">
+                      <div className={`w-full rounded-t-md transition-all duration-500 
+                        ${isCurrentHour ? 'bg-primary' : 'bg-primary/20 group-hover:bg-primary/50'}`} 
+                        style={{ height: `${Math.max(heightPercent, 2)}%` }}>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] sm:text-xs font-semibold ${isCurrentHour ? 'text-primary' : 'text-textLight'}`}>
+                      {point.time}
+                    </span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
-                    <div className={`h-full rounded-full ${item.color} transition-all duration-1000 ease-out`} style={{ width: `${item.percentage}%` }}></div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

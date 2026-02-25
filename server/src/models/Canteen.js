@@ -14,7 +14,6 @@ const canteenSchema = new mongoose.Schema({
     type: Boolean, 
     default: true 
   },  
-
   owner: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Owner' 
@@ -32,6 +31,9 @@ const canteenSchema = new mongoose.Schema({
     type: Boolean, 
     default: false 
   },  
+  lastOpenedAt: { 
+    type: Date 
+  },
   gstin: { 
     type: String 
   },
@@ -47,13 +49,10 @@ const canteenSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Hostel' 
   }],
-   
   isDeleted: {
     type: Boolean,
     default: false
-  },
-  isOpen: { type: Boolean, default: true }
-  
+  }
 }, { timestamps: true });
 
 export default mongoose.model('Canteen', canteenSchema);
