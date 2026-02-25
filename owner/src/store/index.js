@@ -5,7 +5,6 @@ import menuReducer from './menuSlice';
 import orderReducer from './orderSlice';
 import analyticsReducer from './analyticsSlice';
 import dashboard from './dashboardSlice';
-import uiReducer from './ui/uiSlice'; 
 import notificationReducer from './notificationSlice';
 import profileReducer from './profileSlice';
 import transactionReducer from './transactionSlice';
@@ -19,7 +18,6 @@ export const store = configureStore({
     order: orderReducer,
     analytics: analyticsReducer,
     dashboard: dashboard,
-    ui: uiReducer,
     notification: notificationReducer,
     profile: profileReducer,
     transaction: transactionReducer,

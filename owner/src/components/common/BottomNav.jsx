@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, ShoppingBag, UtensilsCrossed, BarChart3, User } from 'lucide-react';
 
 const mobileNavItems = [
-  { name: 'Home', path: '/dashboard', icon: LayoutDashboard },
+  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Orders', path: '/orders', icon: ShoppingBag },
   { name: 'Menu', path: '/menu', icon: UtensilsCrossed },
   { name: 'Analytics', path: '/analytics', icon: BarChart3 },
@@ -13,7 +13,7 @@ const mobileNavItems = [
 const BottomNav = () => {
   return (
     <div className="md:hidden fixed bottom-0 left-0 w-full bg-surface border-t border-borderCol shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 pb-safe">
-      <div className="flex justify-around items-center h-16 px-2">
+      <div className="flex justify-around items-center h-16 px-1 sm:px-2">
         {mobileNavItems.map((item) => (
           <NavLink
             key={item.name}
@@ -29,7 +29,7 @@ const BottomNav = () => {
                 <div className={`p-1.5 rounded-lg transition-all duration-300 ${isActive ? 'bg-primary/10' : ''}`}>
                   <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
-                <span className={`text-[10px] font-medium ${isActive ? 'font-bold' : ''}`}>
+                <span className={`text-[10px] sm:text-xs font-medium ${isActive ? 'font-bold' : ''}`}>
                   {item.name}
                 </span>
               </>

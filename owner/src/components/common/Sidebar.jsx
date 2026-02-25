@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { LayoutDashboard, ShoppingBag, UtensilsCrossed, BarChart3, WalletCards, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, UtensilsCrossed, BarChart3, WalletCards, Bell, User, LogOut } from 'lucide-react';
 import { logoutOwner } from '../../store/authSlice';
 
 const navItems = [
@@ -10,6 +10,8 @@ const navItems = [
   { name: 'Menu', path: '/menu', icon: UtensilsCrossed },
   { name: 'Analytics', path: '/analytics', icon: BarChart3 },
   { name: 'Transactions', path: '/transactions', icon: WalletCards },
+  { name: 'Notifications', path: '/notifications', icon: Bell },
+  { name: 'Profile', path: '/profile', icon: User },
 ];
 
 const Sidebar = () => {
@@ -26,15 +28,12 @@ const Sidebar = () => {
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen bg-sidebar text-gray-300 shadow-xl fixed left-0 top-0 z-40">
       {/* Logo Section */}
-      <div className="h-20 flex items-center justify-center border-b border-gray-800 px-6 bg-sidebar">
-        <img src="/logo.png" alt="CampusBite" className="w-9 h-9 object-contain mr-3" />
-        <h1 className="text-xl font-bold text-white tracking-wide">
-          Campus<span className="text-primary-light">Bite</span>
-        </h1>
+      <div className="h-20 flex items-center justify-center border-b border-gray-800 px-6 bg-sidebar shrink-0">
+        <img src="/logo.png" alt="CampusBite" className="w-20 h-20 object-contain mr-3" />
       </div>
 
       {/* Navigation Links */}
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
+      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 custom-scrollbar">
         {navItems.map((item) => (
           <NavLink
             key={item.name}
@@ -54,7 +53,7 @@ const Sidebar = () => {
       </div>
 
       {/* Logout Button */}
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-800 shrink-0">
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-4 py-3 text-gray-400 hover:bg-gray-800 hover:text-error rounded-lg font-medium transition-colors duration-200"
