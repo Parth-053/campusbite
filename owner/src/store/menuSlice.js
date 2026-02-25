@@ -1,69 +1,80 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-// Mock Initial Data
-const MOCK_MENU_ITEMS = [
-  { id: 'm1', name: 'Veg Burger', price: 60, category: 'Food', available: true },
-  { id: 'm2', name: 'Chicken Wrap', price: 120, category: 'Food', available: true },
-  { id: 'm3', name: 'Cold Coffee', price: 80, category: 'Drink', available: true },
-  { id: 'm4', name: 'French Fries', price: 50, category: 'Food', available: false },
-  { id: 'm5', name: 'Vanilla Scoop', price: 40, category: 'Ice Cream', available: true },
-];
-
-export const fetchMenuItems = createAsyncThunk('menu/fetchMenuItems', async (_, { rejectWithValue }) => {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
-    return MOCK_MENU_ITEMS;
-  } catch  {
-    return rejectWithValue('Failed to load menu');
-  }
+import api from '../api/axios';
+import toast from 'react-hot-toast';
+ 
+export const fetchMenuItems = createAsyncThunk('menu/fetchAll', async (params = {}, { rejectWithValue }) => {
+  try { 
+    const res = await api.get('/menu', { params }); 
+    return res.data.data; 
+  } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to fetch menus'); }
+});
+ 
+export const fetchCategories = createAsyncThunk('menu/fetchCategories', async (_, { rejectWithValue }) => {
+  try { const res = await api.get('/categories/owner/active'); return res.data.data; } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to fetch categories'); }
 });
 
-const initialState = {
-  items: [],
-  isLoading: false,
-  error: null,
-  filter: 'All', // 'All', 'Available', 'Sold Out'
-};
+export const addMenuItem = createAsyncThunk('menu/add', async (formData, { rejectWithValue }) => {
+  try { const res = await api.post('/menu', formData); return res.data.data; } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to add item'); }
+});
+
+export const updateMenuItem = createAsyncThunk('menu/update', async ({ id, formData }, { rejectWithValue }) => {
+  try { const res = await api.patch(`/menu/${id}`, formData); return res.data.data; } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to update item'); }
+});
+
+export const toggleAvailability = createAsyncThunk('menu/toggle', async (id, { rejectWithValue }) => {
+  try { const res = await api.patch(`/menu/${id}/toggle`); return res.data.data; } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to toggle'); }
+});
+
+export const deleteMenuItem = createAsyncThunk('menu/delete', async (id, { rejectWithValue }) => {
+  try { await api.delete(`/menu/${id}`); return id; } 
+  catch (err) { return rejectWithValue(err.response?.data?.message || 'Failed to delete'); }
+});
 
 const menuSlice = createSlice({
   name: 'menu',
-  initialState,
+  initialState: { items: [], categories: [], isLoading: false, isActionLoading: false },
   reducers: {
-    setMenuFilter: (state, action) => {
-      state.filter = action.payload;
+    optimisticToggle: (state, action) => {
+      const item = state.items.find(i => i._id === action.payload);
+      if (item) item.isAvailable = !item.isAvailable;
     },
-    addItem: (state, action) => {
-      state.items.push(action.payload);
-    },
-    updateItem: (state, action) => {
-      const index = state.items.findIndex(item => item.id === action.payload.id);
-      if (index !== -1) {
-        state.items[index] = action.payload;
-      }
-    },
-    deleteItem: (state, action) => {
-      state.items = state.items.filter(item => item.id !== action.payload);
-    },
-    toggleAvailability: (state, action) => {
-      const item = state.items.find(i => i.id === action.payload);
-      if (item) {
-        item.available = !item.available;
-      }
+    optimisticDelete: (state, action) => {
+      state.items = state.items.filter(i => i._id !== action.payload);
     }
   },
   extraReducers: (builder) => {
     builder
       .addCase(fetchMenuItems.pending, (state) => { state.isLoading = true; })
-      .addCase(fetchMenuItems.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items = action.payload;
+      .addCase(fetchMenuItems.fulfilled, (state, action) => { state.isLoading = false; state.items = action.payload; })
+      .addCase(fetchMenuItems.rejected, (state) => { state.isLoading = false; })
+      
+      .addCase(fetchCategories.fulfilled, (state, action) => { state.categories = action.payload; })
+
+      .addCase(addMenuItem.pending, (state) => { state.isActionLoading = true; })
+      .addCase(addMenuItem.fulfilled, (state, action) => { state.isActionLoading = false; state.items.unshift(action.payload); toast.success('Item Added Successfully'); })
+      .addCase(addMenuItem.rejected, (state) => { state.isActionLoading = false; })
+
+      .addCase(updateMenuItem.pending, (state) => { state.isActionLoading = true; })
+      .addCase(updateMenuItem.fulfilled, (state, action) => {
+        state.isActionLoading = false;
+        const index = state.items.findIndex(i => i._id === action.payload._id);
+        if (index !== -1) state.items[index] = action.payload;
+        toast.success('Item Updated Successfully');
       })
-      .addCase(fetchMenuItems.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+      .addCase(updateMenuItem.rejected, (state) => { state.isActionLoading = false; })
+      
+      .addCase(toggleAvailability.rejected, (state, action) => {
+        const item = state.items.find(i => i._id === action.meta.arg);
+        if (item) item.isAvailable = !item.isAvailable;
+        toast.error('Failed to update availability');
       });
   }
 });
 
-export const { setMenuFilter, addItem, updateItem, deleteItem, toggleAvailability } = menuSlice.actions;
+export const { optimisticToggle, optimisticDelete } = menuSlice.actions;
 export default menuSlice.reducer;

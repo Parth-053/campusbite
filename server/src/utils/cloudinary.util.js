@@ -2,18 +2,17 @@ import cloudinary from "../config/cloudinary.js";
 import fs from "fs/promises";  
 
 /**
- * Upload Image to Cloudinary (From Local Path)
+ * Upload Image to Cloudinary  
  */
 export const uploadOnCloudinary = async (localFilePath, folder = "general") => {
   try {
     if (!localFilePath) return null;
 
     const response = await cloudinary.uploader.upload(localFilePath, {
-      folder: `campusbite/${folder}`,
+      folder: `campusbite/${folder}`, 
       resource_type: "auto",
     });
-
-    // Asynchronously delete local file
+ 
     await fs.unlink(localFilePath).catch(err => console.error("Error deleting local file:", err));
 
     return {
@@ -31,11 +30,24 @@ export const uploadOnCloudinary = async (localFilePath, folder = "general") => {
 };
 
 /**
- * Delete Image from Cloudinary
+ * Delete Image from Cloudinary (Smartly handles both publicId and full URL)
  */
-export const deleteFromCloudinary = async (publicId) => {
+export const deleteFromCloudinary = async (imageUrlOrPublicId) => {
   try {
-    if (!publicId) return null;
+    if (!imageUrlOrPublicId) return null;
+    
+    let publicId = imageUrlOrPublicId;
+ 
+    if (imageUrlOrPublicId.startsWith('http')) {
+      const urlParts = imageUrlOrPublicId.split('/');
+      const filenameWithExt = urlParts.pop();  
+      const folder2 = urlParts.pop();  
+      const folder1 = urlParts.pop();  
+      const filename = filenameWithExt.split('.')[0];  
+       
+      publicId = `${folder1}/${folder2}/${filename}`;
+    }
+
     return await cloudinary.uploader.destroy(publicId);
   } catch (error) {
     console.error("Cloudinary Delete Error:", error.message);

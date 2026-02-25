@@ -89,12 +89,12 @@ const Header = () => {
           {isOpen ? (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 border border-success/20 rounded-lg text-sm text-success font-bold cursor-default transition-all">
               <div className="w-2 h-2 rounded-full bg-success animate-ping"></div>
-              Online
+              Opened
             </div>
           ) : (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-background border border-borderCol rounded-lg text-sm text-textLight font-bold cursor-default transition-all">
               <PowerOff size={14} />
-              Offline
+              Closed
             </div>
           )}
 

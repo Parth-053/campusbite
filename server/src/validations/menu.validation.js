@@ -1,20 +1,28 @@
-import Joi from "joi";
-import { MONGO_ID_REGEX } from "../constants/regex.js";
+import Joi from 'joi';
+ 
+const objectIdPattern = /^[0-9a-fA-F]{24}$/;
 
-export const createMenuSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(100).required(),
-  price: Joi.number().positive().min(1).required().messages({
-    "number.min": "Price must be at least Rs 1",
+export const createMenuSchema = {
+  body: Joi.object().keys({
+    name: Joi.string().required().trim(),
+    price: Joi.number().required().min(0),
+    category: Joi.string()
+      .regex(objectIdPattern)
+      .message('Invalid category ID format')
+      .required(),
+    isNonVeg: Joi.boolean().default(false), 
+    isAvailable: Joi.boolean().default(true),
   }),
-  type: Joi.string().valid('veg', 'non-veg').default('veg'),
-  isAvailable: Joi.boolean().default(true),
-  category: Joi.string().pattern(MONGO_ID_REGEX).required(),
-  canteen: Joi.string().pattern(MONGO_ID_REGEX).required(),
-});
+};
 
-export const updateMenuSchema = Joi.object({
-  name: Joi.string().trim().min(2).max(100).optional(),
-  price: Joi.number().positive().min(1).optional(),
-  type: Joi.string().valid('veg', 'non-veg').optional(),
-  isAvailable: Joi.boolean().optional(),
-});
+export const updateMenuSchema = {
+  body: Joi.object().keys({
+    name: Joi.string().trim(),
+    price: Joi.number().min(0),
+    category: Joi.string()
+      .regex(objectIdPattern)
+      .message('Invalid category ID format'),
+    isNonVeg: Joi.boolean(), 
+    isAvailable: Joi.boolean(),
+  }).min(1),  
+};

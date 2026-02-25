@@ -6,6 +6,7 @@ import adminRoutes from "./v1/admin.routes.js";
 import profileRoutes from "./v1/profile.routes.js";
 import CategoryRoutes  from "./v1/category.routes.js";
 import ownerRoutes from "./v1/owner.routes.js";
+import menuRoutes from "./v1/menu.routes.js";
 
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.use("/v1/admin", adminRoutes);
 router.use("/v1/profiles", profileRoutes);
 router.use("/v1/categories", CategoryRoutes);
 router.use("/v1/owner", ownerRoutes);
+router.use("/v1/menu", menuRoutes);
 
 export default router;
