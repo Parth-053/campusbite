@@ -5,7 +5,6 @@ import { restoreSession } from './authSlice';
  
 export const updateProfileData = createAsyncThunk('profile/updateData', async (updatedData, { rejectWithValue, dispatch }) => {
   try {
-    // Sidha request bhejiye bina config ke
     const res = await api.patch('/profiles/owner', updatedData);
     
     dispatch(restoreSession()); 

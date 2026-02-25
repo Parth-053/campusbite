@@ -7,24 +7,25 @@ import { Loader2, AlertCircle } from 'lucide-react';
 const Login = () => {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const { login, error, resetError } = useAuth();
-  const { owner, isLoading } = useSelector((state) => state.auth);  
+  
+  const { ownerData, isLoading } = useSelector((state) => state.auth);  
   const navigate = useNavigate();
   const location = useLocation();
   
   useEffect(() => {
-    if (owner) {
-      const isVerified = owner.isVerified === true || owner.isEmailVerified === true;
+    if (ownerData) {
+      const isVerified = ownerData.isVerified === true || ownerData.isEmailVerified === true;
       
       if (!isVerified) {
         navigate('/verify-email', { replace: true });
-      } else if (owner.status === 'pending') {
+      } else if (ownerData.status === 'pending') {
         navigate('/approval-pending', { replace: true });
       } else {
         const from = location.state?.from?.pathname || '/dashboard';
         navigate(from, { replace: true }); 
       }
     }
-  }, [owner, navigate, location]);
+  }, [ownerData, navigate, location]);
 
   useEffect(() => {
     return () => {
@@ -42,13 +43,13 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="bg-surface p-8 rounded-2xl shadow-xl w-full max-w-md border border-borderCol">
         <div className="text-center mb-8">
-          <img src="/logo.png" alt="CampusBite Logo" className="w-20 h-20 object-contain mx-auto mb-4" />
+          <img src="/logo.png" alt="CampusBite Logo" className="w-20 h-20 object-contain mx-auto mb-2" />
           <h1 className="text-2xl font-bold text-textDark tracking-tight">Partner Login</h1>
           <p className="text-textLight text-sm mt-1">Manage your campus business</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-3 bg-error/10 text-error text-sm rounded-lg border border-error/20 flex items-start gap-2 animate-in fade-in zoom-in duration-200">
+          <div className="mb-6 p-3 bg-error-light text-error text-sm rounded-lg border border-error/20 flex items-start gap-2 animate-in fade-in zoom-in duration-200">
             <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
             <p>{error}</p>
           </div>

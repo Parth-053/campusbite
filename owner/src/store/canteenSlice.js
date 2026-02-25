@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { OWNER_PROFILE } from '../utils/constants';
+import { loginOwner, restoreSession } from './authSlice';
 
 const initialState = {
-  canteen: OWNER_PROFILE
+  canteen: null
 };
 
 const canteenSlice = createSlice({
@@ -10,11 +10,26 @@ const canteenSlice = createSlice({
   initialState,
   reducers: {
     updateCanteenStatus: (state) => {
-      state.canteen.status = state.canteen.status === 'Open' ? 'Closed' : 'Open';
+      if (state.canteen) {
+        state.canteen.status = state.canteen.status === 'Open' ? 'Closed' : 'Open';
+      }
     },
     updateCanteenName: (state, action) => {
-      state.canteen.canteenName = action.payload;
+      if (state.canteen) {
+        state.canteen.canteenName = action.payload;
+      }
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginOwner.fulfilled, (state, action) => {
+         const owner = action.payload?.owner || action.payload;
+         state.canteen = action.payload?.canteen || owner?.canteen || null;
+      })
+      .addCase(restoreSession.fulfilled, (state, action) => {
+         const owner = action.payload?.owner || action.payload;
+         state.canteen = action.payload?.canteen || owner?.canteen || null;
+      });
   }
 });
 

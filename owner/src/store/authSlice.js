@@ -93,28 +93,28 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Register
       .addCase(registerOwnerAccount.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(registerOwnerAccount.fulfilled, (state, action) => { 
         state.isLoading = false; state.ownerData = action.payload.data; state.tempEmail = action.payload.email; state.registrationStep = 4; 
       })
       .addCase(registerOwnerAccount.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
       
-      // Verify OTP
       .addCase(verifyOwnerEmail.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(verifyOwnerEmail.fulfilled, (state) => { 
         state.isLoading = false; if(state.ownerData) state.ownerData.isVerified = true; state.registrationStep = 5; 
       })
       .addCase(verifyOwnerEmail.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
       
-      // Login
       .addCase(loginOwner.pending, (state) => { state.isLoading = true; state.error = null; })
-      .addCase(loginOwner.fulfilled, (state, action) => { state.isLoading = false; state.ownerData = action.payload; state.isAuthenticated = true; })
+      .addCase(loginOwner.fulfilled, (state, action) => { 
+        state.isLoading = false; 
+        state.ownerData = action.payload?.owner || action.payload; 
+        state.isAuthenticated = true; 
+      })
       .addCase(loginOwner.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; signOut(auth); }) 
 
-      // Restore Session Cases
       .addCase(restoreSession.fulfilled, (state, action) => { 
-        state.ownerData = action.payload; 
+        state.ownerData = action.payload?.owner || action.payload; 
         state.isAuthenticated = true; 
       })
       .addCase(restoreSession.rejected, (state) => { 
@@ -122,7 +122,6 @@ const authSlice = createSlice({
         state.isAuthenticated = false; 
       })
       
-      // Logout
       .addMatcher((action) => action.type === logoutOwner.fulfilled.type, (state) => { 
         state.ownerData = null; state.isAuthenticated = false; state.registrationStep = 1; 
       });

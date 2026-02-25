@@ -4,24 +4,24 @@ import { useSelector } from 'react-redux';
 import Loader from './Loader';
 
 const ProtectedRoute = ({ children }) => {
-  const { owner, isLoading } = useSelector((state) => state.auth);
+  const { ownerData, isLoading } = useSelector((state) => state.auth);
   const location = useLocation();
 
   if (isLoading) {
     return <Loader fullScreen={true} />;
   }
  
-  if (!owner) {
+  if (!ownerData) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
  
-  const isVerified = owner.isVerified === true || owner.isEmailVerified === true;
+  const isVerified = ownerData.isVerified === true || ownerData.isEmailVerified === true;
  
   if (!isVerified) {
     return <Navigate to="/verify-email" replace />;
   }
  
-  if (owner.status === 'pending') {
+  if (ownerData.status === 'pending') {
     return <Navigate to="/approval-pending" replace />;
   }
  
