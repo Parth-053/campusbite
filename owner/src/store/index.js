@@ -15,7 +15,7 @@ export const store = configureStore({
     auth: authReducer,
     canteen: canteenReducer,
     menu: menuReducer,
-    order: orderReducer,
+    orders: orderReducer,
     analytics: analyticsReducer,
     dashboard: dashboard,
     notification: notificationReducer,
