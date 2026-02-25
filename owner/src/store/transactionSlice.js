@@ -1,75 +1,58 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import api from '../api/axios';
+import toast from 'react-hot-toast';
 
-// Mock Data
-const MOCK_HISTORY = [
-  { id: 't1', type: 'credit', orderId: '#ORD-001', amount: 120, date: '2023-10-25T10:30:00', status: 'Success' },
-  { id: 't2', type: 'credit', orderId: '#ORD-002', amount: 350, date: '2023-10-25T11:15:00', status: 'Success' },
-  { id: 't3', type: 'debit', orderId: null, amount: 2000, date: '2023-10-24T18:00:00', status: 'Processing' }, // Withdrawal
-  { id: 't4', type: 'credit', orderId: '#ORD-005', amount: 80, date: '2023-10-23T09:00:00', status: 'Success' },
-];
-
-export const fetchWalletData = createAsyncThunk('transaction/fetch', async (_, { rejectWithValue }) => {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      balance: 1250, // Current Wallet Balance
-      commission: 7, // 7% Admin Commission
-      minWithdraw: 500,
-      history: MOCK_HISTORY
-    };
-  } catch {
-    return rejectWithValue('Failed to load wallet');
+export const fetchWalletData = createAsyncThunk('transactions/fetchWallet', async (_, { rejectWithValue }) => {
+  try { 
+    const res = await api.get('/transactions/wallet'); 
+    return res.data.data; 
+  } catch (err) { 
+    return rejectWithValue(err.response?.data?.message || 'Failed to fetch wallet data'); 
   }
 });
 
-export const requestWithdrawal = createAsyncThunk('transaction/withdraw', async (amount, { rejectWithValue }) => {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    return {
-      id: `t${Date.now()}`,
-      type: 'debit',
-      amount: amount,
-      date: new Date().toISOString(),
-      status: 'Pending'
-    };
-  } catch{
-    return rejectWithValue('Withdrawal failed');
+export const requestWithdrawal = createAsyncThunk('transactions/withdraw', async (amount, { rejectWithValue }) => {
+  try { 
+    const res = await api.post('/transactions/withdraw', { amount }); 
+    return res.data.data; 
+  } catch (err) { 
+    return rejectWithValue(err.response?.data?.message || 'Withdrawal failed'); 
   }
 });
-
-const initialState = {
-  balance: 0,
-  commission: 7,
-  minWithdraw: 500,
-  history: [],
-  isLoading: false,
-  error: null,
-};
 
 const transactionSlice = createSlice({
-  name: 'transaction',
-  initialState,
+  name: 'transactions',
+  initialState: {
+    wallet: { availableBalance: 0, totalWithdrawn: 0, grossEarnings: 0, minWithdrawalLimit: 500, commissionRatePercent: 10 },
+    orderHistory: [],
+    withdrawalHistory: [],
+    isLoading: false,
+    isActionLoading: false
+  },
   reducers: {},
   extraReducers: (builder) => {
-    // Fetch Data
     builder
       .addCase(fetchWalletData.pending, (state) => { state.isLoading = true; })
       .addCase(fetchWalletData.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.balance = action.payload.balance;
-        state.commission = action.payload.commission;
-        state.minWithdraw = action.payload.minWithdraw;
-        state.history = action.payload.history;
+        state.wallet = action.payload.wallet;
+        state.orderHistory = action.payload.orderHistory;
+        state.withdrawalHistory = action.payload.withdrawalHistory;
       })
-      .addCase(fetchWalletData.rejected, (state) => { state.isLoading = false; });
-
-    // Withdrawal
-    builder
-      .addCase(requestWithdrawal.pending, (state) => { state.isLoading = true; })
+      .addCase(fetchWalletData.rejected, (state) => { state.isLoading = false; })
+      
+      .addCase(requestWithdrawal.pending, (state) => { state.isActionLoading = true; })
       .addCase(requestWithdrawal.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.balance -= action.payload.amount; // Deduct from balance
-        state.history.unshift(action.payload); // Add to history
+        state.isActionLoading = false;
+        // Instant UI update
+        state.wallet.availableBalance -= action.payload.amountRequested;
+        state.wallet.totalWithdrawn += action.payload.amountRequested;
+        state.withdrawalHistory.unshift(action.payload);
+        toast.success(`Successfully requested ₹${action.payload.amountRequested}`);
+      })
+      .addCase(requestWithdrawal.rejected, (state, action) => {
+        state.isActionLoading = false;
+        toast.error(action.payload || 'Action failed');
       });
   }
 });
