@@ -8,12 +8,12 @@ export const updateUserProfile = createAsyncThunk('profile/updateProfile', async
   try { 
     const user = auth.currentUser;
     if (!user) throw new Error("No active user");
-     
-    const token = await user.getIdToken(true);
+    
+    const token = await user.getIdToken(true); 
     const res = await api.patch('/profiles/customer', formData, {
-       headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'Customer' }
+       headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'customer' }
     });
-     
+    
     dispatch(fetchCustomerProfile(token));
     
     return res.data.data;
@@ -28,9 +28,9 @@ export const deleteAccount = createAsyncThunk('profile/deleteAccount', async (_,
     const user = auth.currentUser;
     if (!user) throw new Error("No active user");
     
-    const token = await user.getIdToken();
+    const token = await user.getIdToken(); 
     await api.delete('/profiles/customer', {
-       headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'Customer' }
+       headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'customer' }
     }); 
 
     await auth.signOut();

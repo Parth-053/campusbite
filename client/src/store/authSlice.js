@@ -3,7 +3,6 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, se
 import { auth } from '../config/firebase';
 import api from '../api/axios';
 
-// 1. Send OTP
 export const sendRegistrationOtp = createAsyncThunk('auth/sendOtp', async (formData, { rejectWithValue }) => {
   try {
     await api.post('/auth/customer/send-otp', { email: formData.email, name: formData.name });
@@ -11,7 +10,6 @@ export const sendRegistrationOtp = createAsyncThunk('auth/sendOtp', async (formD
   } catch (err) { return rejectWithValue(err.response?.data?.message || "Failed to send OTP"); }
 });
 
-// 2. Verify & Register
 export const verifyOtpAndRegister = createAsyncThunk('auth/verifyAndRegister', async ({ otp, userData }, { rejectWithValue }) => {
   try {
     await api.post('/auth/customer/verify-otp-only', { email: userData.email, otp });
@@ -21,9 +19,9 @@ export const verifyOtpAndRegister = createAsyncThunk('auth/verifyAndRegister', a
 
     const customerData = { ...userData };
     delete customerData.password; 
- 
+
     const res = await api.post('/auth/customer/register', customerData, { 
-      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'Customer' } 
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'customer' } 
     });
     return res.data.data;
   } catch (err) {
@@ -32,46 +30,50 @@ export const verifyOtpAndRegister = createAsyncThunk('auth/verifyAndRegister', a
   }
 });
 
-// 3. Login
 export const loginCustomer = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const token = await userCredential.user.getIdToken();
     
     const res = await api.post('/auth/customer/login', {}, { 
-      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'Customer' } 
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'customer' } 
     });
     return res.data.data;
   } catch (err) {
-    if (err.code === 'auth/invalid-credential') return rejectWithValue("Invalid email or password.");
-    return rejectWithValue(err.response?.data?.message || err.message || "Login failed");
+    if (
+      err.code === 'auth/invalid-credential' || 
+      err.code === 'auth/user-not-found' || 
+      err.code === 'auth/wrong-password' ||
+      err.code === 'auth/invalid-email'
+    ) {
+      return rejectWithValue("Invalid email or password.");
+    }
+    if (err.code === 'auth/too-many-requests') return rejectWithValue("Too many failed attempts. Try again later.");
+    return rejectWithValue(err.response?.data?.message || "Login failed.");
   }
 });
 
-// 4. Session Restore
 export const fetchCustomerProfile = createAsyncThunk('auth/fetchProfile', async (token, { rejectWithValue }) => {
   try {
     const res = await api.get('/profiles/customer', {
-      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'Customer' }
+      headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'customer' }
     });
-    
     return res.data.data;
   } catch  { 
     return rejectWithValue("Session expired"); 
   }
 });
 
-// 5. Forgot Password
 export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (email, { rejectWithValue }) => {
   try {
     await sendPasswordResetEmail(auth, email);
     return true;
   } catch (err) {
+    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-email') return rejectWithValue("No account found with this email.");
     return rejectWithValue(err.message || "Failed to send reset email");
   }
 });
 
-// 6. Logout
 export const logoutCustomer = createAsyncThunk('auth/logout', async (_, { rejectWithValue }) => {
   try {
     await signOut(auth);
@@ -85,12 +87,14 @@ const authSlice = createSlice({
     user: null,
     tempUserData: null,
     isAuthenticated: false,
-    isLoading: true, 
+    isInitialized: false,  
+    isLoading: false, 
     error: null,
   },
   reducers: {
     clearAuthError: (state) => { state.error = null; },
     setAuthLoading: (state, action) => { state.isLoading = action.payload; },
+    setInitialized: (state, action) => { state.isInitialized = action.payload; },  
     logoutLocal: (state) => { 
       state.user = null; 
       state.isAuthenticated = false; 
@@ -119,5 +123,5 @@ const authSlice = createSlice({
   }
 });
 
-export const { clearAuthError, setAuthLoading, logoutLocal } = authSlice.actions;
+export const { clearAuthError, setAuthLoading, logoutLocal, setInitialized } = authSlice.actions;
 export default authSlice.reducer;

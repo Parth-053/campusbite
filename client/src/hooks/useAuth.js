@@ -2,24 +2,25 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebase';
-import { fetchCustomerProfile, logoutLocal, setAuthLoading } from '../store/authSlice';
+import { fetchCustomerProfile, logoutLocal, setInitialized } from '../store/authSlice';
 
 const useAuth = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(setAuthLoading(true));
-    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try { 
+        try {
           const token = await user.getIdToken(true); 
-          dispatch(fetchCustomerProfile(token));
-        } catch {
+          await dispatch(fetchCustomerProfile(token)).unwrap();
+        } catch  {
           dispatch(logoutLocal());
+        } finally { 
+          dispatch(setInitialized(true));
         }
       } else {
-        dispatch(logoutLocal());
+        dispatch(logoutLocal()); 
+        dispatch(setInitialized(true));
       }
     });
 
