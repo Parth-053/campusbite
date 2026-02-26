@@ -12,7 +12,12 @@ const useAuth = () => {
     
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        dispatch(fetchCustomerProfile());
+        try { 
+          const token = await user.getIdToken(true); 
+          dispatch(fetchCustomerProfile(token));
+        } catch {
+          dispatch(logoutLocal());
+        }
       } else {
         dispatch(logoutLocal());
       }

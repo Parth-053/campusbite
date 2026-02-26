@@ -5,7 +5,7 @@ import {
   ArrowLeft, Camera, User, Mail, Phone, MapPin, 
   Bell, Clock, Trash2, LogOut, Save, ChevronRight, Loader2, Building
 } from "lucide-react";
-import { logout } from "../../store/authSlice";
+import { logoutCustomer } from "../../store/authSlice";
 import { updateUserProfile, deleteAccount, clearProfileState } from "../../store/profileSlice";
 import { 
   fetchStates, fetchDistricts, fetchColleges, fetchHostels, 
@@ -118,7 +118,7 @@ const Profile = () => {
     if (window.confirm("🛑 Are you sure you want to delete your account? This cannot be undone.")) {
       dispatch(deleteAccount()).then((res) => {
         if(!res.error) {
-          dispatch(logout());
+          dispatch(logoutCustomer());
           navigate("/login");
         }
       });
@@ -126,7 +126,7 @@ const Profile = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutCustomer());
     navigate("/login");
   };
 
