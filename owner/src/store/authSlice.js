@@ -66,10 +66,12 @@ export const loginOwner = createAsyncThunk('auth/loginOwner', async ({ email, pa
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const token = await userCredential.user.getIdToken();
     
-    const res = await api.post('/auth/owner/login', {}, { 
+    // Auth
+    await api.post('/auth/owner/login', {}, { 
       headers: { Authorization: `Bearer ${token}`, 'x-user-role': 'owner' } 
     });
-    
+     
+    const res = await api.get('/profiles/owner');
     return res.data.data;
   } catch (err) {
     if (err.code === 'auth/invalid-credential') return rejectWithValue("Invalid email or password.");
@@ -79,8 +81,8 @@ export const loginOwner = createAsyncThunk('auth/loginOwner', async ({ email, pa
 
 // 5. RESTORE SESSION
 export const restoreSession = createAsyncThunk('auth/restoreSession', async (_, { rejectWithValue }) => {
-  try {
-    const res = await api.get('/auth/owner/profile');
+  try { 
+    const res = await api.get('/profiles/owner');
     return res.data.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || "Session expired");
@@ -92,7 +94,7 @@ export const logoutOwner = createAsyncThunk('auth/logoutOwner', async (_, { reje
   try {
     await signOut(auth);
     return true;
-  } catch {
+  } catch  {
     return rejectWithValue("Logout failed");
   }
 });
@@ -128,7 +130,7 @@ const authSlice = createSlice({
       .addCase(registerOwnerAccount.fulfilled, (state, action) => {
         state.isLoading = false; 
         state.registeredEmail = action.payload.email; 
-        state.registrationStep = 4; // OTP Step
+        state.registrationStep = 4;  
       })
       .addCase(registerOwnerAccount.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
       
@@ -136,13 +138,13 @@ const authSlice = createSlice({
       .addCase(verifyOwnerEmail.fulfilled, (state) => { 
         state.isLoading = false; 
         if(state.ownerData) state.ownerData.isVerified = true; 
-        state.registrationStep = 5; // Success Step
+        state.registrationStep = 5;  
       })
       .addCase(verifyOwnerEmail.rejected, (state, action) => { state.isLoading = false; state.error = action.payload; })
       
       .addCase(loginOwner.pending, (state) => { state.isLoading = true; state.error = null; })
       .addCase(loginOwner.fulfilled, (state, action) => { 
-        state.isLoading = false; 
+        state.isLoading = false;  
         state.ownerData = action.payload?.owner || action.payload; 
         state.isAuthenticated = true; 
       })
@@ -152,7 +154,7 @@ const authSlice = createSlice({
         signOut(auth); 
       }) 
 
-      .addCase(restoreSession.fulfilled, (state, action) => { 
+      .addCase(restoreSession.fulfilled, (state, action) => {  
         state.ownerData = action.payload?.owner || action.payload; 
         state.isAuthenticated = true; 
       })

@@ -25,9 +25,13 @@ const Header = () => {
     month: 'short',
     day: 'numeric'
   });
-
+ 
   const businessName = 
-    profileData?.canteen?.name || 'My Business';
+    profileData?.canteen?.name || 
+    profileData?.canteen?.canteenName || 
+    ownerData?.canteen?.name || 
+    ownerData?.canteen?.canteenName || 
+    'My Business';
   
   const isDashboard = path === '/dashboard' || path === '/';
   const hideRightIconsMobile = path.includes('/transactions') || path.includes('/notifications');
@@ -86,7 +90,6 @@ const Header = () => {
 
       <div className="flex items-center gap-2 shrink-0">
         
-        {/* DESKTOP EXTRAS (Always visible on Laptop) */}
         <div className="hidden md:flex items-center gap-4 mr-2">
           
           <div className="flex items-center gap-2 px-3 py-1.5 bg-background border border-borderCol rounded-lg text-sm text-textLight font-medium cursor-default">
@@ -113,7 +116,6 @@ const Header = () => {
           </button>
         </div>
 
-        {/* MOBILE ONLY ICONS */} 
         {!hideRightIconsMobile && (
           <div className="flex md:hidden items-center gap-2">
             <button onClick={() => navigate('/transactions')} className="relative p-2.5 text-textLight hover:text-primary hover:bg-background rounded-full transition-colors group">
