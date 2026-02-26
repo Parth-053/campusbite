@@ -21,9 +21,7 @@ router.delete("/owner", authorizeRoles(ROLES.OWNER), softDeleteOwnerProfile);
 // CUSTOMER PROFILE ROUTES
 // ==========================================
 router.get("/customer", authorizeRoles(ROLES.CUSTOMER), getCustomerProfile);
-
 router.patch("/customer", authorizeRoles(ROLES.CUSTOMER), upload.single("image"), updateCustomerProfile);
-
 router.delete("/customer", authorizeRoles(ROLES.CUSTOMER), deleteCustomerProfile);
 
 export default router;

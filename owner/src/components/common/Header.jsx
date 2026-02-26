@@ -9,9 +9,16 @@ const Header = () => {
   const location = useLocation();
   const path = location.pathname;
 
-  const { canteen, isLoading} = useSelector((state) => state.canteen);
-  const { isOpen } = useSelector((state) => state.dashboard);
+  const profileData = useSelector((state) => state.profile?.profileData);
+  const ownerData = useSelector((state) => state.auth?.ownerData);
+  const isCanteenLoading = useSelector((state) => state.canteen?.isLoading);
+  
+  const dashboardIsOpen = useSelector((state) => state.dashboard?.isOpen);
+  const isDashboardLoading = useSelector((state) => state.dashboard?.isLoading);
 
+  const isLoading = isCanteenLoading || isDashboardLoading;
+  
+  const isOpen = dashboardIsOpen ?? ownerData?.canteen?.isOpen ?? false;
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'short',
@@ -19,8 +26,9 @@ const Header = () => {
     day: 'numeric'
   });
 
-  const businessName = canteen?.canteenName || canteen?.name || 'My Business';
- 
+  const businessName = 
+    profileData?.canteen?.name || 'My Business';
+  
   const isDashboard = path === '/dashboard' || path === '/';
   const hideRightIconsMobile = path.includes('/transactions') || path.includes('/notifications');
 
@@ -41,7 +49,7 @@ const Header = () => {
          
         <div className="md:hidden flex items-center shrink-0">
           {isDashboard ? (
-            <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            <img src="/logo.png" alt="Logo" className="w-20 h-20 object-contain" />
           ) : (
             <button 
               onClick={() => navigate(-1)} 
@@ -105,7 +113,7 @@ const Header = () => {
           </button>
         </div>
 
-        {/* 📱 MOBILE ONLY ICONS */} 
+        {/* MOBILE ONLY ICONS */} 
         {!hideRightIconsMobile && (
           <div className="flex md:hidden items-center gap-2">
             <button onClick={() => navigate('/transactions')} className="relative p-2.5 text-textLight hover:text-primary hover:bg-background rounded-full transition-colors group">

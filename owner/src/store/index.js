@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './authSlice';
-import canteenReducer from './canteenSlice';
+import authReducer from './authSlice'; 
 import menuReducer from './menuSlice';
 import orderReducer from './orderSlice';
 import analyticsReducer from './analyticsSlice';
@@ -12,8 +11,7 @@ import locationReducer from './locationSlice';
 
 export const store = configureStore({
   reducer: {
-    auth: authReducer,
-    canteen: canteenReducer,
+    auth: authReducer, 
     menu: menuReducer,
     orders: orderReducer,
     analytics: analyticsReducer,

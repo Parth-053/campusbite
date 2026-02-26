@@ -8,6 +8,7 @@ import { sendOtpEmail, sendAdminNewOwnerNotification } from "./email.service.js"
 
 const otpStore = new Map();
 
+// ==================== COMMON OTP SERVICES ====================
 export const sendOtpService = async (email, name) => {
   const otp = generateOTP();
   otpStore.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 }); 
@@ -36,84 +37,55 @@ export const verifyOtpService = async (email, userOtp) => {
   const record = otpStore.get(email);
   if (!record) throw new ApiError(400, "OTP expired or not requested. Please resend.");
   if (Date.now() > record.expiresAt) {
-    otpStore.delete(email); 
+    otpStore.delete(email);
     throw new ApiError(400, "OTP has expired. Please request a new one.");
   }
-  if (record.otp !== userOtp.toString()) throw new ApiError(400, "Invalid OTP Code. Please try again.");
+  if (record.otp !== userOtp) throw new ApiError(400, "Invalid OTP.");
   
   otpStore.delete(email);
   return true;
 };
 
-// ==================== ADMIN SERVICES ====================
-export const adminLoginService = async (firebaseUid) => {
-  const admin = await Admin.findOne({ firebaseUid });
-  if (!admin) throw new ApiError(404, "Admin profile not found.");
-  return admin;
-};
-
 // ==================== OWNER SERVICES ====================
-export const ownerRegisterService = async (firebaseUid, data) => {
-  const { personal, canteen, payment, image } = data;
+export const ownerRegisterService = async (firebaseUid, dataObj) => {
+  const existingOwner = await Owner.findOne({ email: dataObj.personal.email });
+  if (existingOwner) throw new ApiError(409, "Email is already registered.");
 
-  const existingOwner = await Owner.findOne({ $or: [{ email: personal.email }, { firebaseUid }] });
-  if (existingOwner) throw new ApiError(409, "Owner with this email or Firebase UID already exists");
-
-  const fullName = `${personal.firstName} ${personal.lastName}`.trim();
   const newOwner = await Owner.create({
-    firebaseUid, name: fullName, email: personal.email, phone: personal.mobile,
-    upiId: payment.upiId, status: "pending", isActive: true
+    firebaseUid,
+    name: dataObj.personal.name,
+    email: dataObj.personal.email,
+    phone: dataObj.personal.phone,
+    upiId: dataObj.payment.upiId,
+    isVerified: false 
   });
-
-  let selectedHostels = canteen.allowedHostels || [];
-  
-  if (canteen.type === 'hostel' && canteen.hostelId) {
-    if (!selectedHostels.includes(canteen.hostelId)) {
-      selectedHostels.push(canteen.hostelId);
-    }
-  }
 
   await Canteen.create({
-    name: canteen.canteenName, 
-    college: canteen.college, 
-    canteenType: canteen.type,
-    hostel: canteen.type === 'hostel' ? canteen.hostelId : null,
-    allowedHostels: selectedHostels, 
-    image: image || null, 
-    openingTime: canteen.openingTime, 
-    closingTime: canteen.closingTime, 
-    owner: newOwner._id, 
-    isActive: true 
+    owner: newOwner._id,
+    name: dataObj.canteen.name,
+    college: dataObj.canteen.collegeId,
+    hostel: dataObj.canteen.hostelId,
+    allowedHostels: dataObj.canteen.allowedHostels,
+    openingTime: dataObj.canteen.openingTime,
+    closingTime: dataObj.canteen.closingTime,
+    image: dataObj.image || ""
   });
 
-  // 1. Send OTP to Owner
-  await sendOtpService(personal.email, fullName);
-
-  // 2. Fetch Admin from DB and Send Notification
-  const admins = await Admin.find({}); 
-  if (admins && admins.length > 0) {
-    for (const admin of admins) {
-      await sendAdminNewOwnerNotification(
-        admin.email, 
-        admin.name || "System Admin", 
-        fullName, 
-        canteen.canteenName, 
-        personal.email, 
-        personal.mobile
-      );
-    }
-  }
+  await sendOtpService(newOwner.email, newOwner.name);
+  await sendAdminNewOwnerNotification(newOwner);
 
   return newOwner;
+};
+
+export const markOwnerEmailVerifiedService = async (firebaseUid) => {
+  const owner = await Owner.findOneAndUpdate({ firebaseUid }, { isVerified: true }, { new: true });
+  if (!owner) throw new ApiError(404, "Owner not found");
+  return owner;
 };
 
 export const ownerLoginService = async (firebaseUid) => {
   const owner = await Owner.findOne({ firebaseUid });
   if (!owner) throw new ApiError(404, "Owner profile not found.");
-  if (!owner.isVerified) throw new ApiError(403, "Please verify your email address to login.");
-  if (owner.status === 'pending') throw new ApiError(403, "Your account is currently pending Admin approval.");
-  if (owner.status === 'rejected') throw new ApiError(403, "Your registration was rejected by the Admin.");
-  if (owner.status === 'suspended') throw new ApiError(403, "Your account has been suspended by Admin.");
   if (owner.isDeleted) throw new ApiError(403, "Your account has been deleted.");
   if (owner.isBanned) throw new ApiError(403, "Your account is permanently banned.");
   
@@ -123,7 +95,6 @@ export const ownerLoginService = async (firebaseUid) => {
 };
 
 // ==================== CUSTOMER SERVICES ====================
-
 export const sendCustomerOtpService = async (email, name) => {
   const existingCustomer = await Customer.findOne({ email });
   if (existingCustomer) throw new ApiError(409, "An account with this email already exists.");
@@ -154,6 +125,23 @@ export const customerRegisterService = async (customerData) => {
 
 export const customerLoginService = async (firebaseUid) => {
   const customer = await Customer.findOne({ firebaseUid }).populate("college", "name").populate("hostel", "name");
-  if (!customer) throw new ApiError(404, "Customer not found in database. Please register.");
+  if (!customer) throw new ApiError(404, "Customer not found");
+  if (customer.isDeleted) throw new ApiError(403, "Your account is deleted.");
+  if (customer.isBanned) throw new ApiError(403, "Your account is banned.");
+
+  customer.isActive = true;
+  await customer.save();
   return customer;
+};
+
+// ==================== ADMIN SERVICES ====================
+
+export const adminLoginService = async (firebaseUid) => {
+
+  const admin = await Admin.findOne({ firebaseUid });
+
+  if (!admin) throw new ApiError(404, "Admin profile not found.");
+
+  return admin;
+
 };

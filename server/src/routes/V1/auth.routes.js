@@ -39,6 +39,6 @@ router.post("/customer/send-otp", sendCustomerOtp);
 router.post("/customer/verify-otp-only", verifyCustomerOtpOnly); 
 
 router.post("/customer/register", verifyFirebaseToken, validate(registerCustomerSchema), registerCustomer); 
-router.post("/customer/login", verifyFirebaseToken, loginCustomer);
+router.post("/customer/login", verifyFirebaseToken, loginCustomer); 
 
 export default router;
