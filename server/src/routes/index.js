@@ -9,6 +9,7 @@ import ownerRoutes from "./v1/owner.routes.js";
 import menuRoutes from "./v1/menu.routes.js";
 import orderRoutes from "./v1/order.routes.js";
 import transactionRoutes from "./v1/transaction.routes.js";
+import notificationRoutes from "./v1/notification.routes.js";
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use("/v1/owner", ownerRoutes);
 router.use("/v1/menu", menuRoutes);
 router.use("/v1/orders", orderRoutes);
 router.use("/v1/transactions", transactionRoutes);
+router.use("/v1/notifications", notificationRoutes);
 
 export default router;
